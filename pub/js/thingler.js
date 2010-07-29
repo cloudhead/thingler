@@ -72,11 +72,14 @@ function refresh(doc) {
         title.value = doc.title;
     }
     title.setAttribute('data-title', doc.title);
-    list.innerHTML = '';
-    doc.items.forEach(function (item) {
-        list.appendChild(createItem(item));
-    });
-    dom.sortable(list, handleSort);
+
+    if (! dom.dragging.element) {
+        list.innerHTML = '';
+        doc.items.forEach(function (item) {
+            list.appendChild(createItem(item));
+        });
+        dom.sortable(list, handleSort);
+    }
 }
 
 function createItem(item) {

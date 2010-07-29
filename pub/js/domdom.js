@@ -8,7 +8,8 @@ dom.dragging = {
 };
 
 dom.sorting = {
-    element: null
+    element: null,
+    count: null
 };
 
 dom.sortable = function (list, callback) {
@@ -16,6 +17,7 @@ dom.sortable = function (list, callback) {
 
     dom.sorting.element = list;
     dom.sorting.callback = callback;
+    dom.sorting.count = list.childNodes.length;
 
     for (var i = 0; i < items.length; i++) { dom.draggable(items[i]) }
 };
@@ -30,29 +32,32 @@ document.onmouseup = function () {
     }
 };
 document.onmousemove = function (e) {
-    var offset, element, position, prev, next;
+    var offset, element, list, position, prev, next;
 
     dom.mouse = { x: e.pageX, y: e.pageY };
 
     if (dom.dragging.element) {
         dom.dragging.element.style.top = (dom.mouse.y - dom.dragging.offset.y) + 'px';
 
+        list = dom.sorting.element;
+
         if (dom.dragging.index > 0) {
-            prev = dom.sorting.element.childNodes[dom.dragging.index - 1];
+            prev = list.childNodes[dom.dragging.index - 1];
 
             if (dom.mouse.y < dom.getPosition(prev).y + dom.dragging.element.clientHeight) {
                 dom.dragging.index --;
-                dom.sorting.element.insertBefore(dom.dragging.target, prev);
+                list.insertBefore(dom.dragging.target, prev);
+                return;
             }
-            console.log(dom.dragging.index)
         }
 
-        if (dom.dragging.index < dom.sorting.element.childNodes.length) {
-            next = dom.sorting.element.childNodes[dom.dragging.index + 1];
+        if (dom.dragging.index < dom.sorting.count) {
+            next = list.childNodes[dom.dragging.index + 1];
 
             if (dom.mouse.y > dom.getPosition(next).y) {
                 dom.dragging.index ++;
-                dom.sorting.element.insertBefore(dom.dragging.target, next.nextSibling);
+                list.insertBefore(dom.dragging.target, next.nextSibling);
+                return;
             }
         }
         return false;
