@@ -17,7 +17,7 @@ this.server = require('http').createServer(function (request, response) {
     request.addListener('end', function () {
         if (request.url === '/') {
             todos.create(function (e, doc) {
-                response.writeHead(301, { 'Location': '/' + doc.id });
+                response.writeHead(303, { 'Location': '/' + doc.id });
                 response.end();
             });
         } else {
