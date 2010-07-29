@@ -7,6 +7,10 @@ var xhr   = new(pilgrim.Client)({ mime: 'application/json' });
 var input = document.getElementById('new');
 var title = document.getElementById('title');
 var list  = document.getElementById('list');            
+var dirty = false;
+var poll  = 10000;
+
+var titleHasFocus = false;
 
 //
 // New Item
@@ -26,7 +30,11 @@ input.addEventListener('keydown', function (e) {
     return false;
 }, false);
 
+title.addEventListener('focus', function (e) {
+    titleHasFocus = true;
+}, false);
 title.addEventListener('blur', function (e) {
+    titleHasFocus = false;
     xhr.resource(id).put({ title: title.value })(function () {
     
     });
@@ -43,13 +51,32 @@ if (path.match(/^\/[a-f0-9]+$/)) {
             go('not-found');
         } else {
             go('page');
-            title.value = doc.title;
-            doc.items.forEach(function (item) {
-                list.appendChild(createItem(item));
-            });
-            dom.sortable(list);
+            refresh(doc);
         }
     });
+}
+
+// Pull interval
+setInterval(function () {
+    xhr.resource(id).get()(function (err, doc) {
+        if (err) {
+
+        } else {
+            refresh(doc);
+        }
+    });
+}, poll);
+
+function refresh(doc) {
+    if (! titleHasFocus) {
+        title.value = doc.title;
+    }
+    title.setAttribute('data-title', doc.title);
+    list.innerHTML = '';
+    doc.items.forEach(function (item) {
+        list.appendChild(createItem(item));
+    });
+    dom.sortable(list, handleSort);
 }
 
 function createItem(item) {
@@ -77,10 +104,8 @@ function createItem(item) {
 
     // Remove Item
     remove.onclick = function () {
-        console.log(buildList());
-        updateItems(function () {
-            li.removeChild(e);
-        });
+        list.removeChild(e);
+        updateItems();
         return false;
     };
 
@@ -118,12 +143,12 @@ function go(page) {
 
 function handleCheckEvent(checkbox, element, item) {
     if (checkbox.checked) {
-        item.completed = new(Date)().toUTCString();
+        element.setAttribute('data-completed', new(Date)().toUTCString());
         updateItems(function () {
             element.parentNode.setAttribute('class', 'completed');
         });
     } else {
-        delete(item.completed);
+        element.setAttribute('data-completed', '');
         updateItems(function () {
             element.parentNode.setAttribute('class', '');
         });
