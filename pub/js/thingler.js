@@ -43,18 +43,16 @@ title.addEventListener('blur', function (e) {
 // Focus the main input field
 setTimeout(function () { input.focus() }, 50);
 
-if (path.match(/^\/[a-f0-9]+$/)) {
-    xhr.resource(id).get()(function (err, doc) {
-        var completed, item;
+xhr.resource(id).get()(function (err, doc) {
+    var completed, item;
 
-        if (err) {
-            go('not-found');
-        } else {
-            go('page');
-            refresh(doc);
-        }
-    });
-}
+    if (err) {
+        go('not-found');
+    } else {
+        go('page');
+        refresh(doc);
+    }
+});
 
 // Pull interval
 setInterval(function () {
