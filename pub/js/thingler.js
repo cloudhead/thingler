@@ -20,7 +20,7 @@ input.addEventListener('keydown', function (e) {
             list.insertBefore(item, list.firstChild);
             flash(item);
             input.value = '';
-            dom.sortable(list);
+            dom.sortable(list, handleSort);
         });
     }
     return false;
@@ -128,6 +128,10 @@ function handleCheckEvent(checkbox, element, item) {
             element.parentNode.setAttribute('class', '');
         });
     }
+}
+
+function handleSort(e) {
+    updateItems();
 }
 
 function updateItems(callback) {

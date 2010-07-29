@@ -11,10 +11,11 @@ dom.sorting = {
     element: null
 };
 
-dom.sortable = function (list) {
+dom.sortable = function (list, callback) {
     var items = list.querySelectorAll('li');
 
     dom.sorting.element = list;
+    dom.sorting.callback = callback;
 
     for (var i = 0; i < items.length; i++) { dom.draggable(items[i]) }
 };
@@ -25,6 +26,7 @@ document.onmouseup = function () {
         dom.removeClass(dom.dragging.target, 'ghost');
         dom.dragging.element = null;
         dom.dragging.offset  = null;
+        dom.sorting.callback();
     }
 };
 document.onmousemove = function (e) {
