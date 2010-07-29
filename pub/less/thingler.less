@@ -1,4 +1,5 @@
 @yellow: hsl(60, 85%, 97%);
+@black: hsl(215, 20%, 30%);
 @dark-blue: hsl(225, 50%, 40%);
 @light-grey: #ddd;
 @medium-grey: #ccc;
@@ -15,7 +16,7 @@
 
 body {
     padding: 60px 30px;
-    font-family: 'Arial';
+    font-family: 'Arial', sans-serif;
     font-size: 24px;
     width: @page-width;
     margin: 0 auto;
@@ -23,11 +24,15 @@ body {
 body > div {
     display: none;
 }
-#home {
+#not-found {
+    padding: 60px 0;
     h1 {
+        text-align: center;
+        font-size: 48px;
     }
 }
 h1 {
+    color: @black;
     font-size: 42px;
 }
 
@@ -57,31 +62,30 @@ ul {
 }
 #page {
     width: @page-width;
-    @item-height: 55px;
+    @item-height: 48px;
     #title {
         border: 0;
-        font-family: Arial;
         font-size: 48px;
         font-weight: bold;
         border: 1px dashed transparent;
+        font-family: 'Arial', sans-serif;
         &:focus { outline: none; border-color: @light-grey }
         margin-bottom: 15px;
         margin-left: -1px;
         padding: 0.25em 1px;
         width: @page-width - 4px;
     }
-    label a, label a:visited {
-        color: @dark-blue;
+    label, label a, label a:visited {
+        color: @black;
         text-decoration: none;
         display: inline-block;
         line-height: @item-height;
-        &:hover {
-            text-decoration: underline;
-        }
     }
     ul { margin: 30px 0; width: @page-width; padding: 0; }
     li {
+        font-size: 22px;
         width: @page-width - 10px;
+        font-family: Georgia, 'Times New Roman', serif;
         padding: 0 5px;
         cursor: move;
         background-color: white;
@@ -110,11 +114,14 @@ ul {
             height: @item-height;
             line-height: @item-height;
             a {
+                border-bottom: 1px solid #f4f4f4;
+                font-family: Arial, sans-serif;
                 margin-right: 15px;
                 text-decoration: none;
                 color: @medium-grey;
                 &:hover {
-                    text-decoration: underline;
+                    color: hsl(10, 50%, 60%);
+                    border-bottom: 1px solid hsl(10, 50%, 95%);
                 }
             }
         }
@@ -123,8 +130,8 @@ ul {
         border-bottom: 0;
     }
     .completed {
-        label a {
-            color: #bbb;
+        label, label a {
+            color: #ccc;
             text-decoration: line-through;
         }
     }
@@ -159,8 +166,6 @@ input[type="checkbox"] {
     .box-shadow(0px, 2px, 16px, @light-grey);
 }
 .ghost {
-    a {
-        color: @light-grey !important;
-    }
+    color: @light-grey !important;
 }
 

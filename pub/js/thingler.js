@@ -117,7 +117,7 @@ function createItem(item) {
         handleCheckEvent(checkbox, clone, item);
     }, false);
 
-    clone.querySelector('a').innerHTML = item.title;
+    clone.querySelector('label').innerHTML = item.title;
 
     return e;
 }
