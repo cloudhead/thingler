@@ -20,6 +20,7 @@ input.addEventListener('keydown', function (e) {
             list.insertBefore(item, list.firstChild);
             flash(item);
             input.value = '';
+            dom.sortable(list);
         });
     }
     return false;
