@@ -3,8 +3,6 @@ var db = require('./db').database;
 var cache = {};
 
 this.post = function (res, id, params) {
-    require('sys').puts(require('sys').inspect(params));
-
     db.get(id, function (err, doc) {
         if (err) { return res.send(doc.headers.status, {}, err) }
 
