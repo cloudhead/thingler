@@ -44,7 +44,7 @@ var pilgrim = (function () {
 
         if (method === 'get' && data) {
             for (var k in data) {
-                query.push(k + '=' + data[k]); 
+                query.push(k + '=' + data[k]);
             }
             url += '?' + query.join('&');
             data = null;
@@ -104,7 +104,7 @@ var pilgrim = (function () {
             // Success
             if (this.status >= 200 && this.status < 300) {
                 if (typeof(callback) === 'function') {
-                    callback(null, JSON.parse(that.body)); 
+                    callback(null, JSON.parse(that.body));
                 }
             // Error
             } else {
