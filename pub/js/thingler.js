@@ -74,16 +74,13 @@ var titleHasFocus = false;
 //
 input.addEventListener('keydown', function (e) {
     if (e.keyCode === 13) {
-        xhr.resource(id).post({
-            item: { title: input.value }
-        })(function (err, doc) {
-            var item = createItem({ title: input.value, timestamp: doc.timestamp });
-            changes.push({ type: 'insert', value: input.value });
-            list.insertBefore(item, list.firstChild);
-            dom.flash(item);
-            input.value = '';
-            dom.sortable(list, handleSort);
-        });
+        var item = createItem({ title: input.value, timestamp: Date.now() });
+
+        changes.push({ type: 'insert', value: input.value });
+        list.insertBefore(item, list.firstChild);
+        input.value = '';
+        dom.flash(item);
+        dom.sortable(list, handleSort);
     }
     return false;
 }, false);

@@ -48,7 +48,7 @@ this.get = function (res, id, params) {
 
 this.handlers = {
     insert: function (doc, change) {
-        doc.items.unshift(change);
+        doc.items.unshift({ title: change.value });
     },
     title: function (doc, change) {
         doc.title = change.value;
