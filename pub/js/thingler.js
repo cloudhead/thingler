@@ -7,7 +7,62 @@ var xhr   = new(pilgrim.Client)({ mime: 'application/json' });
 var input = document.getElementById('new');
 var title = document.getElementById('title');
 var list  = document.getElementById('list');
-var poll  = 1000;
+
+//
+// The Great Synchronization Clock
+//
+var clock = {
+    timer: null,
+    interval: 1000,
+    init: function (callback) {
+        this.callback = callback;
+        this.reset(1000);
+    },
+    //
+    // Creates a new timer based the interval
+    // passed.
+    //
+    reset: function (interval) {
+        this.interval = interval;
+
+        if (this.timer)   { clearInterval(this.timer) }
+        if (this.timeout) { clearTimeout(this.timeout) }
+
+        this.timer = setInterval(function () {
+            clock.tick();
+        }, this.interval);
+
+        // In `this.interval * 4` milliseconds,
+        // double the interval.
+        // Note that this could never happen,
+        // if a `reset` is executed within that time.
+        this.timeout = setTimeout(function () {
+            clock.reset(clock.interval * 2);
+        }, this.interval * 4);
+
+        console.log('setting rate to: ' + this.interval);
+    },
+    //
+    // Called on every interval tick.
+    //
+    tick: function () {
+        this.callback(this);
+    },
+    //
+    // Called on inbound & outbound activity.
+    // We either preserve the current interval length,
+    // if it's the shortest possible, or divide it by four.
+    //
+    activity: function (bool) {
+        if (bool) {
+            if (this.interval < 4000) {
+                this.reset(1000);
+            } else {
+                this.reset(this.interval / 4);
+            }
+        }
+    }
+};
 
 var rev        = null;
 var changes    = [];
@@ -117,16 +172,15 @@ var handlers = {
 //
 // Synchronization
 //
-setInterval(function () {
+clock.init(function (clock) {
     xhr.resource(id + '/changes').post({
         rev:     rev,
         changes: changes
     })(function (err, doc) {
         if (err) {
             console.log(err);
-        } else if (doc.commits) {
-            changes = [];
-            rev     = doc.rev;
+        } else if (doc && doc.commits) {
+            rev = doc.rev;
 
             if (doc.commits.length > 0) {
                 doc.commits.forEach(function (commit) {
@@ -134,10 +188,16 @@ setInterval(function () {
                         handlers[change.type](change);
                     });
                 });
+                clock.activity(true);
+            } else {
+                clock.activity(changes.length > 0);
             }
+            changes = [];
+        } else {
+            clock.activity(false);
         }
     });
-}, poll);
+});
 
 //
 // Find an item by `title`
