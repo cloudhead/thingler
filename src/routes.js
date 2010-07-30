@@ -20,11 +20,6 @@ this.map = function () {
         this.del().bind  (todo.del);
 
         // Create a new item in the todo list
-        this.post().bind (todo.post);
-
-        this.path('changes', function () {
-            this.post().bind (changes.post);
-            this.get().bind  (changes.get);
-        });
+        this.post().bind (changes.post);
     });
 };

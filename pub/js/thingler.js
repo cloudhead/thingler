@@ -170,7 +170,7 @@ var handlers = {
 // Synchronization
 //
 clock.init(function (clock) {
-    xhr.resource(id + '/changes').post({
+    xhr.resource(id).post({
         rev:     rev,
         changes: changes
     })(function (err, doc) {
