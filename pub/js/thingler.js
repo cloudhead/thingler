@@ -6,9 +6,11 @@ var id    = path.slice(1);
 var xhr   = new(pilgrim.Client)({ mime: 'application/json' });
 var input = document.getElementById('new');
 var title = document.getElementById('title');
-var list  = document.getElementById('list');            
-var dirty = false;
-var poll  = 10000;
+var list  = document.getElementById('list');
+var poll  = 1000;
+
+var rev        = null;
+var changes    = [];
 
 var titleHasFocus = false;
 
@@ -23,7 +25,7 @@ input.addEventListener('keydown', function (e) {
             var item = createItem({ title: input.value, timestamp: doc.timestamp });
             changes.push({ type: 'insert', value: input.value });
             list.insertBefore(item, list.firstChild);
-            flash(item);
+            dom.flash(item);
             input.value = '';
             dom.sortable(list, handleSort);
         });
@@ -31,27 +33,36 @@ input.addEventListener('keydown', function (e) {
     return false;
 }, false);
 
+//
+// Handle title changes
+//
 title.addEventListener('focus', function (e) {
     titleHasFocus = true;
 }, false);
 title.addEventListener('blur', function (e) {
     titleHasFocus = false;
-    xhr.resource(id).put({ title: title.value })(function () {
-    
-    });
+    changes.push({ type: 'title', value: title.value });
 }, false);
 
 // Focus the main input field
 setTimeout(function () { input.focus() }, 50);
 
 xhr.resource(id).get()(function (err, doc) {
-    var completed, item;
-
     if (err) {
         go('not-found');
     } else {
         go('page');
-        refresh(doc);
+
+        title.value = doc.title;
+        rev         = parseInt(doc._rev.match(/^(\d+)/)[1]);
+
+        doc.items.forEach(function (item) {
+            list.appendChild(createItem(item));
+        });
+        dom.sortable(list, handleSort);
+    }
+    function go(page) {
+        document.getElementById(page).style.display = 'block';
     }
 });
 
@@ -139,7 +150,6 @@ function createItem(item) {
     var template = document.getElementById('todo-template');
     var e        = dom.createElement('li'),
         clone    = template.cloneNode(true),
-        edit     = clone.querySelector('a[data-action="edit"]'),
         remove   = clone.querySelector('a[data-action="remove"]'),
         checkbox = clone.querySelector('input');
 
@@ -166,7 +176,7 @@ function createItem(item) {
     };
 
     // Check Item
-    checkbox.addEventListener('click', function () { 
+    checkbox.addEventListener('click', function () {
         if (this.checked) {
             changes.push({ type: 'check', title: item.title });
             clone.setAttribute('class', 'completed');
@@ -181,63 +191,7 @@ function createItem(item) {
     return e;
 }
 
-function buildList() {
-    var list  = [];
-    var nodes = document.querySelectorAll('#list li > div');
-
-    for (var i = 0, node, item; i < nodes.length; i++) {
-        node = nodes[i];
-        item = {};
-
-        for (var j = 0, match; j < node.attributes.length; j++) {
-            if (match = node.attributes[j].name.match(/^data-([a-z]+)$/)) {
-                item[match[1]] = node.attributes[j].value;
-            }
-        }
-        list.push(item); 
-    }
-    return list;
-}
-
-function go(page) {
-    document.getElementById(page).style.display = 'block'; 
-}
-
-function handleCheckEvent(checkbox, element, item) {
-    if (checkbox.checked) {
-        element.setAttribute('data-completed', new(Date)().toUTCString());
-        updateItems(function () {
-            element.parentNode.setAttribute('class', 'completed');
-        });
-    } else {
-        element.setAttribute('data-completed', '');
-        updateItems(function () {
-            element.parentNode.setAttribute('class', '');
-        });
-    }
-}
-
-function handleSort(e) {
-    updateItems();
-}
-
-function updateItems(callback) {
-    xhr.resource(id).put({ items: buildList() })(callback);
-}
-
-function hsla(h, s, l, a) {
-    return 'hsla(' + [h, s + '%', l + '%', a].join(',') + ')';
-}
-
-function flash(element) {
-    var alpha = 80, inc = 1;
-
-    var timer = setInterval(function () {
-        element.style.backgroundColor = hsla(60, 90, 95, alpha / 100);
-        alpha += inc;
-
-        if (alpha === 100) { inc = -0.3 }
-        if (alpha <= 0)    { clearInterval(timer) }
-    }, 5);
+function handleSort(title, to) {
+    return changes.push({ type: 'sort', title: title, to: to });
 }
 

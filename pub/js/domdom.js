@@ -138,3 +138,18 @@ dom.createElement = function (name, attrs) {
     return e;
 };
 
+dom.hsla = function (h, s, l, a) {
+    return 'hsla(' + [h, s + '%', l + '%', a].join(',') + ')';
+};
+
+dom.flash = function (element) {
+    var alpha = 80, inc = 1;
+
+    var timer = setInterval(function () {
+        element.style.backgroundColor = dom.hsla(60, 90, 95, alpha / 100);
+        alpha += inc;
+
+        if (alpha === 100) { inc = -0.3 }
+        if (alpha <= 0)    { clearInterval(timer) }
+    }, 5);
+};
