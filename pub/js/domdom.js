@@ -68,8 +68,6 @@ document.onmousemove = function (e) {
 
 dom.draggable = function (elem) {
     elem.onmousedown = function (e) {
-        console.log(e)
-
         var source = e.srcElement || e.target;
 
         if (source.nodeName === 'LI' || source.nodeName === 'DIV') {

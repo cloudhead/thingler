@@ -39,8 +39,6 @@ var clock = {
         this.timeout = setTimeout(function () {
             clock.reset(clock.interval * 2);
         }, this.interval * 4);
-
-        console.log('setting rate to: ' + this.interval);
     },
     //
     // Called on every interval tick.
