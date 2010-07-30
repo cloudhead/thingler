@@ -52,6 +52,10 @@ body > header {
     font-size: 16px;
 }
 body > footer {
+    &:hover {
+        color: darken(@light-grey, 8%);
+    }
+    p { margin: 10px 0 }
     margin: 30px 0;
     text-align: center;
     font-size: 14px;
@@ -166,6 +170,8 @@ input[type="checkbox"] {
     .box-shadow(0px, 2px, 16px, @light-grey);
 }
 .ghost {
-    color: @light-grey !important;
+    label {
+        color: @light-grey !important;
+    }
 }
 
