@@ -23,7 +23,8 @@ var clock = {
     // passed.
     //
     reset: function (interval) {
-        this.interval = interval;
+        // One hour maximum interval
+        this.interval = Math.min(interval, 3600000);
 
         if (this.timer)   { clearInterval(this.timer) }
         if (this.timeout) { clearTimeout(this.timeout) }
