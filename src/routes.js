@@ -1,5 +1,6 @@
 var todos = require('./todos'),
-    todo  = require('./todo');
+    todo  = require('./todo'),
+    changes = require('./changes');
 //
 // Routing table
 //
@@ -20,5 +21,10 @@ this.map = function () {
 
         // Create a new item in the todo list
         this.post().bind (todo.post);
+
+        this.path('changes', function () {
+            this.post().bind (changes.post);
+            this.get().bind  (changes.get);
+        });
     });
 };
