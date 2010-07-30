@@ -21,6 +21,7 @@ input.addEventListener('keydown', function (e) {
             item: { title: input.value }
         })(function (err, doc) {
             var item = createItem({ title: input.value, timestamp: doc.timestamp });
+            changes.push({ type: 'insert', value: input.value });
             list.insertBefore(item, list.firstChild);
             flash(item);
             input.value = '';
@@ -54,30 +55,84 @@ xhr.resource(id).get()(function (err, doc) {
     }
 });
 
-// Pull interval
-setInterval(function () {
-    xhr.resource(id).get()(function (err, doc) {
-        if (err) {
+var handlers = {
+    insert: function (change) {
+        var item = createItem({ title: change.value });
+        list.insertBefore(item, list.firstChild);
+        dom.sortable(list, handleSort);
+        dom.flash(item);
+    },
+    title: function (change) {
+        title.value = change.value;
+        dom.flash(title);
+    },
+    check: function (change) {
+        var element = find(change.title);
+        element.querySelector('[type="checkbox"]').checked = true;
+        element.setAttribute('class', 'completed');
+        dom.flash(element);
+    },
+    uncheck: function (change) {
+        var element  = find(change.title),
+            checkbox = element.querySelector('[type="checkbox"]');
 
+        checkbox.checked  = false;
+        checkbox.disabled = false;
+        element.setAttribute('class', '');
+        dom.flash(element);
+    },
+    remove: function (change) {
+        var element = find(change.title);
+        element && list.removeChild(element.parentNode);
+    },
+    sort: function (change) {
+        var elem  = find(change.title).parentNode,
+            index = dom.getIndex(elem),
+            ref   = list.childNodes[change.to];
+
+        if (change.to > index) {
+            if (change.to === list.childNodes.length - 1) {
+                list.appendChild(elem);
+            } else {
+                list.insertBefore(elem, ref.nextSibling);
+            }
         } else {
-            refresh(doc);
+            list.insertBefore(elem, ref);
+        }
+        dom.flash(elem);
+    }
+};
+
+//
+// Synchronization
+//
+setInterval(function () {
+    xhr.resource(id + '/changes').post({
+        rev:     rev,
+        changes: changes
+    })(function (err, doc) {
+        if (err) {
+            console.log(err);
+        } else if (doc.commits) {
+            changes = [];
+            rev     = doc.rev;
+
+            if (doc.commits.length > 0) {
+                doc.commits.forEach(function (commit) {
+                    commit.changes.forEach(function (change) {
+                        handlers[change.type](change);
+                    });
+                });
+            }
         }
     });
 }, poll);
 
-function refresh(doc) {
-    if (! titleHasFocus) {
-        title.value = doc.title;
-    }
-    title.setAttribute('data-title', doc.title);
-
-    if (! dom.dragging.element) {
-        list.innerHTML = '';
-        doc.items.forEach(function (item) {
-            list.appendChild(createItem(item));
-        });
-        dom.sortable(list, handleSort);
-    }
+//
+// Find an item by `title`
+//
+function find(title) {
+    return list.querySelector('[data-title="' + title + '"]');
 }
 
 function createItem(item) {
@@ -106,13 +161,19 @@ function createItem(item) {
     // Remove Item
     remove.onclick = function () {
         list.removeChild(e);
-        updateItems();
+        changes.push({ type: 'remove', title: item.title });
         return false;
     };
 
     // Check Item
     checkbox.addEventListener('click', function () { 
-        handleCheckEvent(checkbox, clone, item);
+        if (this.checked) {
+            changes.push({ type: 'check', title: item.title });
+            clone.setAttribute('class', 'completed');
+        } else {
+            changes.push({ type: 'uncheck', title: item.title });
+            clone.setAttribute('class', '');
+        }
     }, false);
 
     clone.querySelector('label').innerHTML = item.title;

@@ -26,9 +26,11 @@ document.onmouseup = function () {
     if (dom.dragging.element) {
         dom.sorting.element.removeChild(dom.dragging.element);
         dom.removeClass(dom.dragging.target, 'ghost');
+
+        dom.sorting.callback(dom.dragging.element.firstChild.getAttribute('data-title'), dom.dragging.index);
+
         dom.dragging.element = null;
         dom.dragging.offset  = null;
-        dom.sorting.callback();
     }
 };
 document.onmousemove = function (e) {
