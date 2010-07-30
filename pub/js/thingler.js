@@ -52,19 +52,22 @@ var clock = {
     // We either preserve the current interval length,
     // if it's the shortest possible, or divide it by four.
     //
-    activity: function (bool) {
-        if (bool) {
-            if (this.interval < 4000) {
-                this.reset(1000);
-            } else {
-                this.reset(this.interval / 4);
-            }
+    activity: function () {
+        if (this.interval < 4000) {
+            this.reset(1000);
+        } else {
+            this.reset(this.interval / 4);
         }
+        return true;
     }
 };
 
 var rev        = null;
-var changes    = [];
+var changes    = {
+    data:  [],
+    push:  function (change) { return clock.activity() && this.data.push(change) },
+    clear: function ()       { return this.data = [] }
+};
 
 var titleHasFocus = false;
 
@@ -171,7 +174,7 @@ var handlers = {
 clock.init(function (clock) {
     xhr.resource(id).post({
         rev:     rev,
-        changes: changes
+        changes: changes.data
     })(function (err, doc) {
         if (err) {
             console.log(err);
@@ -184,13 +187,9 @@ clock.init(function (clock) {
                         handlers[change.type](change);
                     });
                 });
-                clock.activity(true);
-            } else {
-                clock.activity(changes.length > 0);
+                clock.activity();
             }
-            changes = [];
-        } else {
-            clock.activity(false);
+            changes.clear();
         }
     });
 });
