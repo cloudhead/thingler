@@ -1,5 +1,5 @@
 //
-// thingler.js
+// ~ thingler.js ~
 //
 var path  = window.location.pathname;
 var id    = path.slice(1);
