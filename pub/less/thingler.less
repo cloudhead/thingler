@@ -11,6 +11,15 @@
     -moz-box-shadow: @x @y @blur @color;
     box-shadow: @x @y @blur @color;
 }
+.link (@color: inherit) {
+    border-bottom: 1px solid #eee;
+    font-family: Arial, sans-serif;
+    color: @color;
+    &:hover {
+        color: hsl(10, 50%, 60%);
+        border-bottom: 1px solid hsl(10, 50%, 95%);
+    }
+}
 
 * { margin: 0; padding: 0 }
 
@@ -24,6 +33,10 @@ body {
 body > div {
     display: none;
 }
+a {
+    text-decoration: none;
+    color: @medium-grey;
+}
 #not-found {
     padding: 60px 0;
     h1 {
@@ -31,16 +44,12 @@ body > div {
         font-size: 48px;
     }
     p { text-align: center; margin-top: 30px; }
-    a {
-        border-bottom: 1px solid #eee;
-        font-family: Arial, sans-serif;
-        text-decoration: none;
-        color: @medium-grey;
-        &:hover {
-            color: hsl(10, 50%, 60%);
-            border-bottom: 1px solid hsl(10, 50%, 95%);
-        }
-    }
+    a { .link }
+}
+#about {
+    margin-top: -30px;
+    font-size: 14px;
+    float: left;
 }
 h1 {
     color: @black;
@@ -63,14 +72,30 @@ body > header {
     font-size: 16px;
 }
 body > footer {
-    &:hover {
-        color: darken(@light-grey, 8%);
-    }
     p { margin: 10px 0 }
     margin: 30px 0;
-    text-align: center;
+    text-align: right;
     font-size: 14px;
-    color: @light-grey;
+    color: lighten(@light-grey, 5%);
+    p:first-child {
+        color: @light-grey;
+        font-size: 18px;
+        &:hover, &:hover a {
+            color: darken(@light-grey, 8%);
+            a:hover {
+                color: hsl(10, 50%, 60%);
+                border-bottom: 1px solid hsl(10, 50%, 95%);
+            }
+        }
+    }
+    a {
+        color: @light-grey;
+        border-bottom: 1px solid #eee;
+        &:hover {
+            color: hsl(10, 50%, 60%);
+            border-bottom: 1px solid hsl(10, 50%, 95%);
+        }
+    }
 }
 ul {
     -webkit-padding-start: 0;
@@ -164,6 +189,17 @@ input#new {
 }
 input[type="checkbox"] {
     font-size: 22px;
+}
+#about {
+    display: none;
+    margin-top: 0px;
+    text-align: right;
+    p {
+        font-size: 14px !important;
+        color: @dark-grey;
+        line-height: 22px;
+        a { .link(@medium-grey) }
+    }
 }
 
 .dragging {

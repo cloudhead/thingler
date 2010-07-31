@@ -7,6 +7,7 @@ var xhr   = new(pilgrim.Client)({ mime: 'application/json' });
 var input = document.getElementById('new');
 var title = document.getElementById('title');
 var list  = document.getElementById('list');
+var about = document.getElementById('about');
 var create = document.getElementById('create');
 
 //
@@ -213,6 +214,14 @@ var handlers = {
             list.insertBefore(elem, ref);
         }
         dom.flash(elem);
+    }
+};
+
+document.querySelector('[data-action="about"]').onclick = function () {
+    if (about.style.display !== 'block') {
+        about.style.display = 'block';
+    } else {
+        about.style.display = 'none';
     }
 };
 
