@@ -131,7 +131,15 @@ xhr.resource(id).get()(function (err, doc) {
             list.appendChild(createItem(item));
         });
         dom.sortable(list, handleSort);
+    }
 
+    function go(page) {
+        document.getElementById(page).style.display = 'block';
+    }
+    function initialize(doc) {
+        // Initialize title and revision number
+        title.value = doc.title;
+        rev         = parseInt(doc._rev.match(/^(\d+)/)[1]);
         //
         // Start the Clock
         //
@@ -157,14 +165,6 @@ xhr.resource(id).get()(function (err, doc) {
                 }
             });
         });
-    }
-    function go(page) {
-        document.getElementById(page).style.display = 'block';
-    }
-    function initialize(doc) {
-        // Initialize title and revision number
-        title.value = doc.title;
-        rev         = parseInt(doc._rev.match(/^(\d+)/)[1]);
     }
 });
 
