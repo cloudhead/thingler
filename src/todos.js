@@ -1,4 +1,5 @@
 var db = require('./db').database;
+var todo = require('./todo').doc;
 
 this.post = function (res, params) {
     this.create(function (e, doc) {
@@ -11,9 +12,10 @@ this.post = function (res, params) {
 };
 
 this.create = function (callback) {
-    db.insert({
-        title: "Hello, I'm a Todo List.",
+    var doc = {
+        title: todo.title,
         timestamp: new(Date)().toUTCString(),
-        items: []
-    }, callback);
+        items: todo.items
+    };
+    db.insert(doc, callback);
 };

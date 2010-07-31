@@ -7,6 +7,7 @@ var xhr   = new(pilgrim.Client)({ mime: 'application/json' });
 var input = document.getElementById('new');
 var title = document.getElementById('title');
 var list  = document.getElementById('list');
+var create = document.getElementById('create');
 
 //
 // The Great Synchronization Clock
@@ -104,12 +105,28 @@ setTimeout(function () { input.focus() }, 50);
 xhr.resource(id).get()(function (err, doc) {
     if (err) {
         go('not-found');
+        if (id.match(/^[a-zA-Z0-9-]+$/)) {
+            create.onclick = function () {
+                xhr.resource(id).put()(function (e, doc) {
+                    if (e) {
+
+                    } else {
+                        go('page');
+                        document.getElementById('not-found').style.display = 'none';
+                        initialize(doc);
+                    }
+                });
+                return false;
+            };
+        } else {
+            create.style.display = 'none';
+        }
     } else {
         go('page');
 
-        title.value = doc.title;
-        rev         = parseInt(doc._rev.match(/^(\d+)/)[1]);
+        initialize(doc);
 
+        // Initialize list
         doc.items.forEach(function (item) {
             list.appendChild(createItem(item));
         });
@@ -117,6 +134,11 @@ xhr.resource(id).get()(function (err, doc) {
     }
     function go(page) {
         document.getElementById(page).style.display = 'block';
+    }
+    function initialize(doc) {
+        // Initialize title and revision number
+        title.value = doc.title;
+        rev         = parseInt(doc._rev.match(/^(\d+)/)[1]);
     }
 });
 

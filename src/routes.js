@@ -9,7 +9,7 @@ this.map = function () {
     this.post('/').bind(todos.post);
 
     // List
-    this.path(/^([a-f0-9]+)/, function () {
+    this.path(/^([a-zA-Z0-9-]+)/, function () {
         // Retrieve the todo list
         this.get().bind  (todo.get);
 

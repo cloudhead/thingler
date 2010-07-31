@@ -30,6 +30,17 @@ body > div {
         text-align: center;
         font-size: 48px;
     }
+    p { text-align: center; margin-top: 30px; }
+    a {
+        border-bottom: 1px solid #eee;
+        font-family: Arial, sans-serif;
+        text-decoration: none;
+        color: @medium-grey;
+        &:hover {
+            color: hsl(10, 50%, 60%);
+            border-bottom: 1px solid hsl(10, 50%, 95%);
+        }
+    }
 }
 h1 {
     color: @black;
@@ -164,8 +175,6 @@ input[type="checkbox"] {
     background-color: hsla(60, 100%, 95%, 0.5) !important;
     width: @page-width;
     border: 1px dashed @light-grey !important;
-    a {
-    }
     .actions { display: none }
     .box-shadow(0px, 2px, 16px, @light-grey);
 }

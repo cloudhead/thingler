@@ -2,6 +2,11 @@ var sys = require('sys');
 
 var db = require('./db').database;
 
+this.doc = {
+    title: "Hello, I'm a Todo List.",
+    items: []
+};
+
 //
 // Retrieve a list
 //
@@ -16,21 +21,26 @@ this.get = function (res, id, params) {
 };
 
 //
-// Update a list
+// Update a list, or create a named list
 //
 this.put = function (res, id, params) {
     db.get(id, function (e, doc) {
-        if (e) {
-            res.send(doc.headers.status, {}, doc.doc);
+        var newDoc = {
+            title: exports.doc.title,
+            items: [],
+            timestamp: new(Date)().toUTCString()
+        };
+        if (e && (e.error !== 'not_found')) {
+            res.send(doc.headers.status, {}, doc.json);
         } else {
-            delete(params._id);
-            delete(params._rev);
-
-            db.save(id, params, function (e, doc) {
+            db.put(id, newDoc, function (e, doc) {
                 if (e) {
                     res.send(doc.headers.status, {}, doc.doc);
                 } else {
-                    res.send(200, {}, { ok: true });
+                    res.send(doc.headers.status, {}, {
+                        title: newDoc.title,
+                        _rev: doc._rev
+                    });
                 }
             });
         }
