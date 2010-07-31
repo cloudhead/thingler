@@ -131,6 +131,32 @@ xhr.resource(id).get()(function (err, doc) {
             list.appendChild(createItem(item));
         });
         dom.sortable(list, handleSort);
+
+        //
+        // Start the Clock
+        //
+        clock.init(function (clock) {
+            xhr.resource(id).post({
+                rev:     rev,
+                changes: changes.data
+            })(function (err, doc) {
+                if (err) {
+                    if (err !== 404) { console.log(err) }
+                } else if (doc && doc.commits) {
+                    rev = doc.rev;
+
+                    if (doc.commits.length > 0) {
+                        doc.commits.forEach(function (commit) {
+                            commit.changes.forEach(function (change) {
+                                handlers[change.type](change);
+                            });
+                        });
+                        clock.activity();
+                    }
+                    changes.clear();
+                }
+            });
+        });
     }
     function go(page) {
         document.getElementById(page).style.display = 'block';
@@ -189,32 +215,6 @@ var handlers = {
         dom.flash(elem);
     }
 };
-
-//
-// Synchronization
-//
-clock.init(function (clock) {
-    xhr.resource(id).post({
-        rev:     rev,
-        changes: changes.data
-    })(function (err, doc) {
-        if (err) {
-            console.log(err);
-        } else if (doc && doc.commits) {
-            rev = doc.rev;
-
-            if (doc.commits.length > 0) {
-                doc.commits.forEach(function (commit) {
-                    commit.changes.forEach(function (change) {
-                        handlers[change.type](change);
-                    });
-                });
-                clock.activity();
-            }
-            changes.clear();
-        }
-    });
-});
 
 //
 // Find an item by `title`
