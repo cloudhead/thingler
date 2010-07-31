@@ -8,11 +8,11 @@ this.post = function (res, id, params) {
 
         // Apply all the changes to the document
         params.changes.forEach(function (change) {
-            exports.handlers[change.type](doc, change);
+            exports.handlers[change.type](doc.json, change);
         });
 
         if (params.changes.length > 0) {
-            db.save(id, function (err, doc) {
+            db.save(id, doc._rev, doc.json, function (err, doc) {
                 if (err) { return res.send(doc.headers.status, {}, err) }
                 reply(doc.rev);
             });
