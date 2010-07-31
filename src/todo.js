@@ -13,9 +13,9 @@ this.doc = {
 this.get = function (res, id, params) {
     db.get(id, function (e, result) {
         if (e) {
-            res.send(result.headers.status, {}, result.doc);
+            res.send(result.headers.status, {}, result.json);
         } else {
-            res.send(200, {}, result.doc || result);
+            res.send(200, {}, result.json || result);
         }
     });
 };
@@ -35,7 +35,7 @@ this.put = function (res, id, params) {
         } else {
             db.put(id, newDoc, function (e, doc) {
                 if (e) {
-                    res.send(doc.headers.status, {}, doc.doc);
+                    res.send(doc.headers.status, {}, doc.json);
                 } else {
                     res.send(doc.headers.status, {}, {
                         title: newDoc.title,
@@ -53,7 +53,7 @@ this.put = function (res, id, params) {
 this.del = function (res, id, params) {
     db.remove(id, function (e, result) {
         if (e) {
-            res.send(result.headers.status, {}, result.doc);
+            res.send(result.headers.status, {}, result.json);
         } else {
             res.send(200, {}, { ok: true });
         }
@@ -68,11 +68,11 @@ this.post = function (res, id, params) {
         var item = params.item;
 
         if (e) {
-            res.send(doc.headers.status, {}, doc.doc);
+            res.send(doc.headers.status, {}, doc.json);
         } else {
             db.save(id, { items: [item].concat(doc.items) }, function (e, doc) {
                 if (e) {
-                    res.send(doc.headers.status, {}, doc.doc);
+                    res.send(doc.headers.status, {}, doc.json);
                 } else {
                     res.send(201, {}, { ok: true });
                 }

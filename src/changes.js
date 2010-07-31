@@ -14,10 +14,10 @@ this.post = function (res, id, params) {
         if (params.changes.length > 0) {
             db.save(id, function (err, doc) {
                 if (err) { return res.send(doc.headers.status, {}, err) }
-                reply(doc.rev || doc._rev);
+                reply(doc.rev);
             });
         } else {
-            reply(doc.rev || doc._rev);
+            reply(doc._rev);
         }
 
         function reply(rev) {
