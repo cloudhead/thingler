@@ -48,7 +48,7 @@ this.server = require('http').createServer(function (request, response) {
     });
 });
 
-this.server.listen(options.port);
+this.server.listen(parseInt(process.argv[2]) || options.port);
 
 // Write lock file
 fs.writeFileSync(options.lock, process.pid.toString() + '\n', 'ascii');
