@@ -1,14 +1,22 @@
 
+var fs = require('fs');
+
 var journey = require('journey'),
-    static = require('node-static'),
-    todos = require('./todos'),
+    static = require('node-static');
+
+var todos = require('./todos'),
     routes = require('./routes');
+
+var options = {
+    port: 8080,
+    lock: '/tmp/thinglerd.pid'
+};
 
 //
 // Create a Router object with an associated routing table
 //
 var router = new(journey.Router)(routes.map, { strict: true });
-var file = new(static.Server)('./pub', { cache: 0 });
+var file   = new(static.Server)('./pub', { cache: 0 });
 
 this.server = require('http').createServer(function (request, response) {
     var body = "";
@@ -40,3 +48,14 @@ this.server = require('http').createServer(function (request, response) {
     });
 });
 
+this.server.listen(options.port);
+
+// Write lock file
+fs.writeFileSync(options.lock, process.pid.toString() + '\n', 'ascii');
+
+process.on('uncaughtException', function (err) {
+    fs.writeFileSync('crash-report.log', JSON.stringify(err), 'ascii');
+});
+process.on('exit', function () {
+    fs.unlinkSync(options.lock);
+});
