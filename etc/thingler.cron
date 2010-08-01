@@ -1,0 +1,10 @@
+#
+# /etc/cron.d/thingler.cron
+#
+
+# Hourly & Daily backups of the thingler database
+00 * * * * cp /var/lib/couchdb/thingler.couch /usr/local/var/thingler-backup.hourly.couch
+00 0 * * * cp /var/lib/couchdb/thingler.couch /usr/local/var/thingler-backup.daily.couch
+
+# Compact database every Sunday at 6AM
+00 6 * * 0 curl -H "Content-Type: application/json" -X POST http://0.0.0.0:5984/thingler/_compact
