@@ -67,7 +67,7 @@ var clock = {
 var rev        = null;
 var changes    = {
     data:  [],
-    push:  function (change) { return clock.activity() && this.data.push(change) },
+    push:  function (change) { return clock.tick(), this.data.push(change) },
     clear: function ()       { return this.data = [] }
 };
 
