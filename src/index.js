@@ -9,17 +9,18 @@ var todo = require('./todo/collection'),
     routes = require('./routes');
 
 var options = {
-    port: 8080,
+    port: parseInt(process.argv[2]) || 8080,
     lock: '/tmp/thinglerd.pid'
 };
 
-var env = process.env['NODE_ENV'] || 'development';
+var env = (process.env['NODE_ENV'] === 'production' ||
+           options.port === 80) ? 'production' : 'development';
 
 //
 // Create a Router object with an associated routing table
 //
 var router = new(journey.Router)(routes.map, { strict: true });
-var file   = new(static.Server)('./pub', { cache: env === 'production' ? 3600 : 0 });
+var file   = new(static.Server)('./pub', { cache: env === 'production' ? 3600 : 8 });
 
 this.server = require('http').createServer(function (request, response) {
     var body = "";
@@ -51,7 +52,7 @@ this.server = require('http').createServer(function (request, response) {
     });
 });
 
-this.server.listen(parseInt(process.argv[2]) || options.port);
+this.server.listen(options.port);
 
 // Write lock file
 fs.writeFileSync(options.lock, process.pid.toString() + '\n', 'ascii');
