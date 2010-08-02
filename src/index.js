@@ -55,7 +55,8 @@ this.server.listen(parseInt(process.argv[2]) || options.port);
 fs.writeFileSync(options.lock, process.pid.toString() + '\n', 'ascii');
 
 process.on('uncaughtException', function (err) {
-    fs.writeFileSync('crash-report.log', JSON.stringify(err), 'ascii');
+    fs.writeFileSync('crash-report.log', err.stack, 'ascii');
+    process.exit(1);
 });
 process.on('exit', function () {
     fs.unlinkSync(options.lock);
