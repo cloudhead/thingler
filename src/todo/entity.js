@@ -11,7 +11,7 @@ this.Entity = function (attributes) {
     for (var k in attributes) { this[k] = attributes[k] }
 };
 this.Entity.prototype = {
-    get json() {
+    get json () {
         var json = {};
         var keys = Object.keys(this);
 
