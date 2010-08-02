@@ -1,12 +1,11 @@
-var todos = require('./todos'),
-    todo  = require('./todo'),
+var todo  = require('./todo'),
     changes = require('./changes');
 //
 // Routing table
 //
 this.map = function () {
     // Create a new todo list
-    this.post('/').bind(todos.post);
+    this.post('/');
 
     // List
     this.path(/^([a-zA-Z0-9-]+)/, function () {
@@ -19,7 +18,7 @@ this.map = function () {
         // Destroy the todo list
         this.del().bind  (todo.del);
 
-        // Create a new item in the todo list
+        // Create a change
         this.post().bind (changes.post);
     });
 };

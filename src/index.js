@@ -1,10 +1,11 @@
 
 var fs = require('fs');
+var sys = require('sys');
 
 var journey = require('journey'),
     static = require('node-static');
 
-var todos = require('./todos'),
+var todo = require('./todo/collection'),
     routes = require('./routes');
 
 var options = {
@@ -24,8 +25,8 @@ this.server = require('http').createServer(function (request, response) {
     request.addListener('data', function (chunk) { body += chunk });
     request.addListener('end', function () {
         if (request.url === '/') {
-            todos.create(function (e, doc) {
-                response.writeHead(303, { 'Location': '/' + doc.id });
+            todo.create(function (id) {
+                response.writeHead(303, { 'Location': '/' + id });
                 response.end();
             });
         } else {

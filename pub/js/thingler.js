@@ -140,19 +140,19 @@ xhr.resource(id).get()(function (err, doc) {
     function initialize(doc) {
         // Initialize title and revision number
         title.value = doc.title;
-        rev         = parseInt(doc._rev.match(/^(\d+)/)[1]);
+        rev         = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
         //
         // Start the Clock
         //
         clock.init(function (clock) {
             xhr.resource(id).post({
-                rev:     rev,
+                rev:     rev || 0,
                 changes: changes.data
             })(function (err, doc) {
                 if (err) {
                     if (err !== 404) { console.log(err) }
                 } else if (doc && doc.commits) {
-                    rev = doc.rev;
+                    rev = doc.rev || 0;
 
                     if (doc.commits.length > 0) {
                         doc.commits.forEach(function (commit) {

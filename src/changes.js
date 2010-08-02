@@ -1,20 +1,22 @@
 var db = require('./db').database;
+var todos = require('./todo/collection');
 
 var cache = {};
 
 this.post = function (res, id, params) {
-    db.get(id, function (err, doc) {
+    todos.get(id, function (err, doc) {
         if (err) { return res.send(doc.headers.status, {}, err) }
 
         // Apply all the changes to the document
         params.changes.forEach(function (change) {
-            exports.handlers[change.type](doc.json, change);
+            exports.handlers[change.type](doc, change);
         });
 
         if (params.changes.length > 0) {
-            db.save(id, doc._rev, doc.json, function (err, doc) {
+            db.put(id, doc, function (err, doc) {
                 if (err) { return res.send(doc.headers.status, {}, err) }
                 reply(doc.rev);
+                todos.clear(id);
             });
         } else {
             reply(doc._rev);
@@ -25,7 +27,7 @@ this.post = function (res, id, params) {
 
             var dirty = cache[id].slice(0);
 
-            rev = parseInt(rev.match(/^(\d+)-/)[1]);
+            rev = rev ? parseInt(rev.match(/^(\d+)-/)[1]) : 0;
 
             if (params.changes.length > 0) {
                 cache[id].push({ rev: rev, changes: params.changes });
