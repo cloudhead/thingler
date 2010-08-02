@@ -20,7 +20,7 @@ var env = (process.env['NODE_ENV'] === 'production' ||
 // Create a Router object with an associated routing table
 //
 var router = new(journey.Router)(routes.map, { strict: true });
-var file   = new(static.Server)('./pub', { cache: env === 'production' ? 3600 : 8 });
+var file   = new(static.Server)('./pub', { cache: env === 'production' ? 3600 : 0 });
 
 this.server = require('http').createServer(function (request, response) {
     var body = "";
