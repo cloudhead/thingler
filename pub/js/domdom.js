@@ -23,14 +23,22 @@ dom.sortable = function (list, callback) {
 };
 
 document.onmouseup = function () {
+    var list = dom.sorting.element;
+
     if (dom.dragging.element) {
-        dom.sorting.element.removeChild(dom.dragging.element);
+        list.removeChild(dom.dragging.element);
         dom.removeClass(dom.dragging.target, 'ghost');
+        dom.removeClass(dom.sorting.element, 'unselectable');
 
         dom.sorting.callback(dom.dragging.element.firstChild.getAttribute('data-title'), dom.dragging.index);
 
         dom.dragging.element = null;
         dom.dragging.offset  = null;
+
+        // Re-enable text selection
+        for (var i = 0; i < list.childNodes.length; i++) {
+            dom.enableSelection(list.childNodes[i]);
+        }
     }
 };
 document.onmousemove = function (e) {
@@ -82,14 +90,19 @@ dom.draggable = function (elem) {
 
         this.parentNode.appendChild(clone);
 
-        dom.addClass(clone, 'dragging');
-        dom.addClass(this,  'ghost');
+        dom.addClass(clone,               'dragging');
+        dom.addClass(dom.sorting.element, 'unselectable');
+        dom.addClass(this,                'ghost');
 
         dom.dragging.index   = dom.getIndex(this);
         dom.dragging.offset  = { x: e.pageX - pos.x, y: e.pageY - pos.y };
         dom.dragging.element = clone;
         dom.dragging.target  = this;
 
+        // Disable text selection while dragging
+        for (var i = 0; i < dom.sorting.element.childNodes.length; i++) {
+            dom.disableSelection(dom.sorting.element.childNodes[i]);
+        }
         document.onmousemove(e);
     };
 };
@@ -150,4 +163,13 @@ dom.flash = function (element) {
         if (alpha === 100) { inc = -0.3 }
         if (alpha <= 0)    { clearInterval(timer) }
     }, 5);
+};
+
+dom.disableSelection = function (element) {
+    element.onselectstart = function () { return false };
+    element.unselectable = "on";
+};
+dom.enableSelection = function (element) {
+    element.onselectstart = null;
+    element.unselectable = "off";
 };
