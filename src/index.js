@@ -58,8 +58,12 @@ this.server.listen(options.port);
 fs.writeFileSync(options.lock, process.pid.toString() + '\n', 'ascii');
 
 process.on('uncaughtException', function (err) {
-    fs.writeFileSync('crash-report.log', err.stack, 'ascii');
-    process.exit(1);
+    if (env === 'production') {
+        fs.writeFileSync('crash-report.log', err.stack, 'ascii');
+        process.exit(1);
+    } else {
+        sys.error(err.stack);
+    }
 });
 process.on('exit', function () {
     fs.unlinkSync(options.lock);
