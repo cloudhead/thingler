@@ -25,7 +25,7 @@ this.get = function (id, callback) {
         } else {
             db.get(id, function (e, result) {
                 if (e) {
-                    callback(e.json, result);
+                    callback(e, result);
                 } else {
                     callback(null, result.json);
                 }
