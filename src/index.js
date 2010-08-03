@@ -54,8 +54,10 @@ this.server = require('http').createServer(function (request, response) {
 
 this.server.listen(options.port);
 
-// Write lock file
-fs.writeFileSync(options.lock, process.pid.toString() + '\n', 'ascii');
+if (env === 'production') {
+    // Write lock file
+    fs.writeFileSync(options.lock, process.pid.toString() + '\n', 'ascii');
+}
 
 process.on('uncaughtException', function (err) {
     if (env === 'production') {
@@ -66,5 +68,5 @@ process.on('uncaughtException', function (err) {
     }
 });
 process.on('exit', function () {
-    fs.unlinkSync(options.lock);
+    (env === 'production') && fs.unlinkSync(options.lock);
 });
