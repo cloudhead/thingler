@@ -133,6 +133,7 @@ xhr.resource(id + '.json').get()(function (err, doc) {
 
     function go(page) {
         document.getElementById(page).style.display = 'block';
+        if (page === 'page') { input.focus() }
     }
     function initialize(doc) {
         // Initialize title and revision number
