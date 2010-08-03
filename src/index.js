@@ -23,9 +23,9 @@ var router = new(journey.Router)(routes.map, { strict: true });
 var file   = new(static.Server)('./pub', { cache: env === 'production' ? 3600 : 0 });
 
 this.server = require('http').createServer(function (request, response) {
-    var body = "";
+    var body = [];
 
-    request.addListener('data', function (chunk) { body += chunk });
+    request.addListener('data', function (chunk) { body.push(chunk) });
     request.addListener('end', function () {
         if (request.url === '/') {
             todo.create(function (id) {
@@ -36,7 +36,7 @@ this.server = require('http').createServer(function (request, response) {
             //
             // Dispatch the request to the router
             //
-            router.route(request, body, function (result) {
+            router.route(request, body.join(''), function (result) {
                 if (result.status === 406) { // A request for non-json data
                     file.serve(request, response, function (err, result) {
                         if (err) {
