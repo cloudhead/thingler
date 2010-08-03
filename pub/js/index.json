@@ -1,0 +1,4 @@
+{
+  "files": ["pilgrim.js", "domdom.js", "thingler.js"],
+  "minify": false
+}
