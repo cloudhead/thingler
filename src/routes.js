@@ -8,7 +8,7 @@ this.map = function () {
     this.post('/');
 
     // List
-    this.path(/^([a-zA-Z0-9-]+)/, function () {
+    this.path(/^([a-zA-Z0-9-]+)(?:\.json)?/, function () {
         // Retrieve the todo list
         this.get().bind  (todo.get);
 

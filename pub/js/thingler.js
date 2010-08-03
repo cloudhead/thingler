@@ -103,7 +103,7 @@ title.addEventListener('blur', function (e) {
 // Focus the main input field
 setTimeout(function () { input.focus() }, 50);
 
-xhr.resource(id).get()(function (err, doc) {
+xhr.resource(id + '.json').get()(function (err, doc) {
     if (err) {
         go('not-found');
         if (id.match(/^[a-zA-Z0-9-]+$/)) {
