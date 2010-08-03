@@ -100,9 +100,6 @@ title.addEventListener('blur', function (e) {
     changes.push({ type: 'title', value: title.value });
 }, false);
 
-// Focus the main input field
-setTimeout(function () { input.focus() }, 50);
-
 xhr.resource(id + '.json').get()(function (err, doc) {
     if (err) {
         go('not-found');
