@@ -78,7 +78,8 @@ function find(title, doc) {
             return doc.items[i];
         }
     }
-    return null;
+    // For now, fail silently
+    return {};
 }
 function indexOf(title, doc) {
     for (var i = 0; i < doc.items.length; i++) {
