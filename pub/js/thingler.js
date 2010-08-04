@@ -200,10 +200,10 @@ var handlers = {
     sort: function (change) {
         var elem  = find(change.title).parentNode,
             index = dom.getIndex(elem),
-            ref   = list.childNodes[change.to];
+            ref   = list.children[change.to];
 
         if (change.to > index) {
-            if (change.to === list.childNodes.length - 1) {
+            if (change.to === list.children.length - 1) {
                 list.appendChild(elem);
             } else {
                 list.insertBefore(elem, ref.nextSibling);

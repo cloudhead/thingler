@@ -9,7 +9,8 @@ dom.dragging = {
 
 dom.sorting = {
     element: null,
-    count: null
+    count: null,
+    positions: []
 };
 
 dom.sortable = function (list, callback) {
@@ -17,7 +18,7 @@ dom.sortable = function (list, callback) {
 
     dom.sorting.element = list;
     dom.sorting.callback = callback;
-    dom.sorting.count = list.childNodes.length;
+    dom.sorting.count = list.childElementCount;
 
     for (var i = 0; i < items.length; i++) { dom.draggable(items[i]) }
 };
@@ -36,8 +37,8 @@ document.onmouseup = function () {
         dom.dragging.offset  = null;
 
         // Re-enable text selection
-        for (var i = 0; i < list.childNodes.length; i++) {
-            dom.enableSelection(list.childNodes[i]);
+        for (var i = 0; i < list.childElementCount; i++) {
+            dom.enableSelection(list.children[i]);
         }
     }
 };
@@ -52,26 +53,35 @@ document.onmousemove = function (e) {
         list = dom.sorting.element;
 
         if (dom.dragging.index > 0) {
-            prev = list.childNodes[dom.dragging.index - 1];
+            prev = list.children[dom.dragging.index - 1];
 
             if (dom.mouse.y < dom.getPosition(prev).y + dom.dragging.element.clientHeight) {
                 dom.dragging.index --;
                 list.insertBefore(dom.dragging.target, prev);
-                return;
+                return dom.refreshPositions(list);
             }
         }
 
         if (dom.dragging.index < dom.sorting.count) {
-            next = list.childNodes[dom.dragging.index + 1];
+            next = list.children[dom.dragging.index + 1];
 
             if (dom.mouse.y > dom.getPosition(next).y) {
                 dom.dragging.index ++;
                 list.insertBefore(dom.dragging.target, next.nextSibling);
-                return;
+                return dom.refreshPositions(list);
             }
         }
         return false;
     }
+};
+
+dom.refreshPositions = function (elem) {
+    dom.sorting.positions = [];
+
+    for (var i = 0; i < elem.childElementCount; i++) {
+        dom.sorting.positions.push(dom.getPosition(elem.children[i]));
+    }
+    return false;
 };
 
 dom.draggable = function (elem) {
@@ -100,8 +110,8 @@ dom.draggable = function (elem) {
         dom.dragging.target  = this;
 
         // Disable text selection while dragging
-        for (var i = 0; i < dom.sorting.element.childNodes.length; i++) {
-            dom.disableSelection(dom.sorting.element.childNodes[i]);
+        for (var i = 0; i < dom.sorting.element.childElementCount; i++) {
+            dom.disableSelection(dom.sorting.element.children[i]);
         }
         document.onmousemove(e);
     };
@@ -127,6 +137,12 @@ dom.addClass = function (e, name) {
 dom.getPosition = function (e) {
     var left = 0;
     var top  = 0;
+
+    var cached = null;
+
+    if (cached = dom.sorting.positions[dom.getIndex(e)]) {
+        return cached;
+    }
 
     while (e.offsetParent) {
         left += e.offsetLeft;
