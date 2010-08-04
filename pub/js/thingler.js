@@ -79,9 +79,10 @@ var titleHasFocus = false;
 //
 input.addEventListener('keydown', function (e) {
     if (e.keyCode === 13 && input.value.length > 0) {
-        var item = createItem({ title: input.value, timestamp: Date.now() });
+        var value = input.value.replace(/</g, '&lt;').replace(/>/, '&gt;');
+        var item = createItem({ title: value, timestamp: Date.now() });
 
-        changes.push({ type: 'insert', value: input.value });
+        changes.push({ type: 'insert', value: value });
         list.insertBefore(item, list.firstChild);
         input.value = '';
         dom.flash(item);

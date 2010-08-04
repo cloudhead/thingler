@@ -9,7 +9,9 @@ this.post = function (res, id, params) {
 
         // Apply all the changes to the document
         params.changes.forEach(function (change) {
-            exports.handlers[change.type](doc, change);
+            if (validate(change)) {
+                exports.handlers[change.type](doc, change);
+            }
         });
 
         if (params.changes.length > 0) {
@@ -49,28 +51,53 @@ this.get = function (res, id, params) {
 
 this.handlers = {
     insert: function (doc, change) {
-        doc.items.unshift({ title: change.value });
+        doc.items.unshift({ title: sanitize(change.value) });
     },
     title: function (doc, change) {
-        doc.title = change.value;
+        doc.title = sanitize(change.value);
     },
     sort: function (doc, change) {
-        var index = indexOf(change.title, doc),
-            item  = doc.items.splice(index, 1)[0];
-
-        doc.items.splice(change.to, 0, item);
+        var index = indexOf(change.title, doc), item;
+        if (index !== -1) {
+            item = doc.items.splice(index, 1)[0];
+            doc.items.splice(change.to, 0, item);
+        }
     },
     check: function (doc, change) {
-        find(change.title, doc).completed = Date.now();
+        var item = find(change.title, doc);
+        if (item) {
+            item.completed = Date.now();
+        }
     },
     uncheck: function (doc, change) {
-        delete(find(change.title, doc).completed);
+        var item = find(change.title, doc);
+        if (item) {
+            delete(item.completed);
+        }
     },
     remove: function (doc, change) {
         var index = indexOf(change.title, doc);
-        doc.items.splice(index, 1);
+        if (index !== -1) {
+            doc.items.splice(index, 1);
+        }
     }
 };
+
+function validate(change) {
+    if (change.type && (change.type in this.handlers)) {
+        if ('value' in change) {
+            if ((typeof(change.value) !== 'string') || change.value.length > 256) {
+                return false;
+            }
+        }
+    } else {
+        return false;
+    }
+    return true;
+}
+function sanitize(str) {
+    return str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 function find(title, doc) {
     for (var i = 0; i < doc.items.length; i++) {
@@ -78,8 +105,7 @@ function find(title, doc) {
             return doc.items[i];
         }
     }
-    // For now, fail silently
-    return {};
+    return null;
 }
 function indexOf(title, doc) {
     for (var i = 0; i < doc.items.length; i++) {
