@@ -27,7 +27,9 @@ this.server = require('http').createServer(function (request, response) {
 
     request.addListener('data', function (chunk) { body.push(chunk) });
     request.addListener('end', function () {
-        if (request.url === '/') {
+        if (/MSIE [0-7]/.test(request.headers['user-agent'])) { // Block old IE
+            file.serveFile('/upgrade.html', request, response);
+        } else if (request.url === '/') {
             todo.create(function (id) {
                 response.writeHead(303, { 'Location': '/' + id });
                 response.end();
