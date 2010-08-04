@@ -159,9 +159,9 @@ dom.getPosition = function (e) {
 dom.createElement = function (name, attrs) {
     var e = document.createElement(name);
 
-    Object.keys(attrs || {}).forEach(function (a) {
+    for (var a in (attrs || {})) {
         e[a] = attrs[a];
-    });
+    }
     return e;
 };
 

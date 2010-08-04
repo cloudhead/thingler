@@ -249,9 +249,9 @@ function createItem(item) {
     clone.id = '';
     clone.setAttribute('style', '');
 
-    Object.keys(item).forEach(function (k) {
+    for (var k in item) {
         clone.setAttribute('data-' + k, item[k]);
-    });
+    }
 
     e.appendChild(clone);
 
