@@ -86,7 +86,7 @@ this.handlers = {
 };
 
 function validate(change) {
-    if (change.type && (change.type in this.handlers)) {
+    if (change.type && (change.type in exports.handlers)) {
         if ('value' in change) {
             if ((typeof(change.value) !== 'string') || change.value.length > 256) {
                 return false;
