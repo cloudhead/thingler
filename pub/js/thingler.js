@@ -223,6 +223,7 @@ document.querySelector('[data-action="about"]').onclick = function () {
     } else {
         about.style.display = 'none';
     }
+    return false;
 };
 
 //
