@@ -51,7 +51,9 @@ this.get = function (res, id, params) {
 
 this.handlers = {
     insert: function (doc, change) {
-        doc.items.unshift({ title: sanitize(change.value) });
+        if (doc.items.length < 256) {
+            doc.items.unshift({ title: sanitize(change.value) });
+        }
     },
     title: function (doc, change) {
         doc.title = sanitize(change.value);
