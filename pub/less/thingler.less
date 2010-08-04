@@ -11,8 +11,8 @@
     -moz-box-shadow: @x @y @blur @color;
     box-shadow: @x @y @blur @color;
 }
-.link (@color: inherit) {
-    border-bottom: 1px solid #eee;
+.link (@color: inherit, @border-color: #eee, @border-style: solid) {
+    border-bottom: 1px @border-style @border-color;
     font-family: Arial, sans-serif;
     color: @color;
     &:hover {
@@ -206,7 +206,7 @@ input[type="checkbox"] {
         font-size: 14px !important;
         color: @dark-grey;
         line-height: 22px;
-        a { .link(@medium-grey) }
+        a { .link(lighten(@dark-grey, 8%), @light-grey, dashed) }
     }
 }
 
