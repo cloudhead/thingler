@@ -9,6 +9,7 @@ var title = document.getElementById('title');
 var list  = document.getElementById('list');
 var about = document.getElementById('about');
 var create = document.getElementById('create');
+var footer = document.querySelector('footer');
 
 //
 // The Great Synchronization Clock
@@ -77,7 +78,7 @@ var titleHasFocus = false;
 // New Item
 //
 input.addEventListener('keydown', function (e) {
-    if (e.keyCode === 13) {
+    if (e.keyCode === 13 && input.value.length > 0) {
         var item = createItem({ title: input.value, timestamp: Date.now() });
 
         changes.push({ type: 'insert', value: input.value });
@@ -122,6 +123,7 @@ xhr.resource(id + '.json').get()(function (err, doc) {
     } else {
         go('page');
 
+        footer.style.visibility = 'visible'
         initialize(doc);
 
         // Initialize list

@@ -177,7 +177,7 @@ dom.flash = function (element) {
         alpha += inc;
 
         if (alpha === 100) { inc = -0.3 }
-        if (alpha <= 0)    { clearInterval(timer) }
+        if (alpha <= 0)    { clearInterval(timer), element.style.backgroundColor = '' }
     }, 5);
 };
 
