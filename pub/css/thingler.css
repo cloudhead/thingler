@@ -15,9 +15,12 @@ body>footer a{color:#dddddd;border-bottom:1px solid #eee;}body>footer a:hover{co
 ul{-webkit-padding-start:0;}
 #page{width:800px;}#page #title{border:0;font-size:48px;font-weight:bold;border:1px dashed transparent;color:#3d4a5c;font-family:'Arial',sans-serif;margin-bottom:15px;margin-left:-1px;padding:0.25em 1px;width:796px;}#page #title:focus{outline:none;border-color:#dddddd;}
 #page ul#list.unselectable li{cursor:default;user-select:none;-moz-user-select:none;-webkit-user-select:none;}
-#page label,#page label a,#page label a:visited{color:#3d4a5c;text-decoration:none;display:inline-block;line-height:48px;}
+#page label,#page label a,#page label a:visited{color:#3d4a5c;text-decoration:none;display:inline-block;line-height:48px;overflow:hidden;position:relative;white-space:nowrap;}
+#page label{width:670px;}
+#page label:after{content:" ";padding:1px;z-index:10;position:absolute;top:0;right:-15px;width:30px;height:48px;display:block;line-height:48px;background-color:white;-webkit-box-shadow:-15px 0px 30px white;-moz-box-shadow:-15px 0px 30px white;box-shadow:-15px 0px 30px white;}
 #page ul{margin:30px 0;width:800px;padding:0;}
 #page li{font-size:22px;width:790px;font-family:Georgia,'Times New Roman',serif;padding:0 5px;cursor:move;background-color:white;height:48px;border-bottom:1px dotted #dddddd;}#page li:hover{background-color:#fefef1;}#page li:hover .actions{visibility:visible;}
+#page li:hover label:after{background-color:#fefef1;-webkit-box-shadow:-15px 0px 30px #fefef1;-moz-box-shadow:-15px 0px 30px #fefef1;box-shadow:-15px 0px 30px #fefef1;}
 #page li input{vertical-align:middle;height:48px;line-height:48px;float:left;display:block;margin-right:25px;}
 #page li .actions{visibility:hidden;float:right;font-size:14px;height:48px;line-height:48px;}#page li .actions a{border-bottom:1px solid #f4f4f4;font-family:Arial,sans-serif;margin-right:15px;text-decoration:none;color:#cccccc;}#page li .actions a:hover{color:#cc7766;border-bottom:1px solid #f9eeec;}
 #page li:last-child{border-bottom:0;}
