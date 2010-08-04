@@ -25,14 +25,15 @@ this.post = function (res, id, params) {
         function reply(rev) {
             cache[id] = cache[id] || [];
 
-            var dirty = cache[id].slice(0);
+            var dirty = cache[id].slice(0), status = 200;
 
             rev = rev ? parseInt(rev.match(/^(\d+)-/)[1]) : 0;
 
             if (params.changes.length > 0) {
                 cache[id].push({ rev: rev, changes: params.changes });
+                status = 201;
             }
-            res.send(201, {}, {
+            res.send(status, {}, {
                 rev: rev,
                 commits: dirty.filter(function (commit) {
                     return commit.rev > params.rev;
