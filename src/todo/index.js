@@ -22,9 +22,9 @@ this.get = function (res, id, params) {
 this.put = function (res, id, params) {
     entity.save(id, function (e, doc) {
         if (e) {
-            res.send(e.headers.status, {}, e);
+            res.send(doc.headers.status, {}, e);
         } else {
-            res.send(doc.status, {}, doc);
+            res.send(doc.headers.status, {}, doc);
         }
     });
 };
