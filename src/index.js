@@ -1,6 +1,7 @@
 
 var fs = require('fs');
 var sys = require('sys');
+var Buffer = require('buffer').Buffer;
 
 var journey = require('journey'),
     static = require('node-static');
@@ -27,12 +28,22 @@ this.server = require('http').createServer(function (request, response) {
 
     request.addListener('data', function (chunk) { body.push(chunk) });
     request.addListener('end', function () {
+        // If the response hasn't completed within 5 seconds
+        // of the request, send a 500 back.
+        var timer = setTimeout(function () {
+            if (! response.finished) {
+                file.serveFile('/error.html', request, response);
+            }
+        }, 5000);
+
         if (/MSIE [0-7]/.test(request.headers['user-agent'])) { // Block old IE
             file.serveFile('/upgrade.html', request, response);
+            clearTimeout(timer);
         } else if (request.url === '/') {
             todo.create(function (id) {
                 response.writeHead(303, { 'Location': '/' + id });
                 response.end();
+                clearTimeout(timer);
             });
         } else {
             //
@@ -43,11 +54,13 @@ this.server = require('http').createServer(function (request, response) {
                     file.serve(request, response, function (err, result) {
                         if (err) {
                             file.serveFile('/index.html', request, response);
+                            clearTimeout(timer);
                         }
                     });
                 } else {
                     response.writeHead(result.status, result.headers);
                     response.end(result.body);
+                    clearTimeout(timer);
                 }
             });
         }
@@ -63,8 +76,10 @@ if (env === 'production') {
 
 process.on('uncaughtException', function (err) {
     if (env === 'production') {
-        fs.writeFileSync('crash-report.log', err.stack, 'ascii');
-        process.exit(1);
+        fs.open('thinglerd.log', 'a+', 0666, function (e, fd) {
+            var buffer = new(Buffer)(new(Date)().toUTCString() + ' -- ' + err.stack + '\n');
+            fs.write(fd, buffer, 0, buffer.length, null);
+        });
     } else {
         sys.error(err.stack);
     }
