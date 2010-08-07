@@ -1,4 +1,5 @@
 @yellow: hsl(60, 85%, 97%);
+@dark-yellow: hsl(hue(@yellow), 55%, 92%);
 @black: hsl(215, 20%, 30%);
 @dark-blue: hsl(225, 50%, 40%);
 @light-grey: #ddd;
@@ -10,6 +11,11 @@
     -webkit-box-shadow: @x @y @blur @color;
     -moz-box-shadow: @x @y @blur @color;
     box-shadow: @x @y @blur @color;
+}
+.border-radius(@r) {
+    -webkit-border-radius: @r;
+    -moz-border-radius: @r;
+    border-radius: @r;
 }
 .link (@color: inherit, @border-color: #eee, @border-style: solid) {
     border-bottom: 1px @border-style @border-color;
@@ -117,6 +123,16 @@ ul {
         padding: 0.25em 1px;
         width: @page-width - 4px;
     }
+    a#show-everything {
+        font-size: 14px;
+        margin: 0;
+        padding: 0;
+        float: right;
+        text-align: right;
+        margin-top: 15px;
+        margin-right: 95px;
+        .link(@medium-grey);
+    }
     ul#list.unselectable li {
         cursor: default;
         user-select: none;
@@ -151,8 +167,8 @@ ul {
     //    background-color: white;
     //    .box-shadow(-15px, 0px, 30px, white);
     //}
-    ul { margin: 30px 0; width: @page-width; padding: 0; }
-    li {
+    ul#list { margin: 30px 0; width: @page-width; padding: 0; }
+    #list > li {
         overflow: hidden;
         font-size: 22px;
         width: @page-width - 10px;
@@ -178,10 +194,51 @@ ul {
             display: block;
             margin-right: 25px;
         }
+        @color: desaturate(darken(@dark-yellow, 20%), 35%);
         //height: @item-height;
         height: auto;
         border-bottom: 1px dotted @light-grey;
         &:hover {
+            .tags li a { color: darken(@color, 5%); background-color: white }
+        }
+        .tags {
+            @padding-v: 4px;
+            float: right;
+            display: inline;
+            line-height: @item-height;
+            height: @item-height;
+            font-size: 16px;
+            margin: 0 15px;
+            li {
+                display: inline-block;
+                margin-left: 5px;
+
+                a {
+                    padding: 0;
+                    margin: 0;
+                    line-height: 1em;
+                    margin: auto 0;
+                    padding: @padding-v 8px;
+                    border-width: 1px;
+                    border-style: solid;
+                    border-color: @dark-yellow;
+                    border-bottom-color: lighten(@dark-yellow, 5%);
+                    background-color: @yellow;
+                    display: inline-block;
+                    color: @color;
+                    .box-shadow(0, 1px, 2px, #eee);
+                    .border-radius(2px);
+                    &:hover {
+                        color: darken(@color, 10%);
+                        border-color: darken(@dark-yellow, 8%);
+                    }
+                }
+                &.active a {
+                    border-color: darken(@dark-yellow, 8%);
+                    color: darken(@color, 10%);
+                }
+            }
+            li:first-child { margin-left: 0 }
         }
         .actions {
             visibility: hidden;
@@ -202,7 +259,7 @@ ul {
             }
         }
     }
-    li:last-child {
+    #list > li:last-child {
         border-bottom: 0;
     }
     .completed {
@@ -226,6 +283,11 @@ input#new {
 input[type="checkbox"] {
     font-size: 22px;
 }
+a[data-action="remove"] {
+    padding: 8px;
+    border: 0 !important;
+    &:hover { border: 0 !important }
+}
 #about {
     display: none;
     margin-top: 0px;
@@ -247,12 +309,16 @@ input[type="checkbox"] {
     background-color: hsla(60, 100%, 95%, 0.7) !important;
     width: @page-width;
     border: 1px dashed @light-grey !important;
-    .actions { display: none }
+    .actions { visibility: hidden }
     .box-shadow(0px, 2px, 16px, @light-grey);
 }
 .ghost {
     label {
         color: @light-grey !important;
+    }
+    .tags {
+        color: @light-grey !important;
+        li { background-color: #fefefe !important; border-color: #eee !important }
     }
     margin-top: -1px;
     border-bottom: 1px dashed @light-grey !important;

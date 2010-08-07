@@ -14,7 +14,7 @@ dom.sorting = {
 };
 
 dom.sortable = function (list, callback) {
-    var items = list.querySelectorAll('li');
+    var items = list.children;
 
     dom.sorting.element = list;
     dom.sorting.callback = callback;

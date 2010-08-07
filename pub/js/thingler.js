@@ -10,6 +10,7 @@ var list  = document.getElementById('list');
 var about = document.getElementById('about');
 var create = document.getElementById('create');
 var footer = document.querySelector('footer');
+var hash   = window.location.hash;
 
 //
 // The Great Synchronization Clock
@@ -73,6 +74,7 @@ var changes    = {
 };
 
 var titleHasFocus = false;
+var tagPattern = /#[^#\s]+/g;
 
 //
 // New Item
@@ -80,9 +82,17 @@ var titleHasFocus = false;
 input.addEventListener('keydown', function (e) {
     if (e.keyCode === 13 && input.value.length > 0) {
         var value = input.value.replace(/</g, '&lt;').replace(/>/, '&gt;');
-        var item = createItem({ title: value, timestamp: Date.now() });
+        var tags = value.match(tagPattern) || [], item;
 
-        changes.push({ type: 'insert', value: value });
+        value = value.replace(tagPattern, '').trim();
+        tags = tags.map(function (tag) { return tag.slice(1) });
+        item = createItem({
+            title: value,
+            tags: tags,
+            timestamp: Date.now()
+        });
+
+        changes.push({ type: 'insert', tags: tags, value: value });
         list.insertBefore(item, list.firstChild);
         input.value = '';
         dom.flash(item);
@@ -131,6 +141,7 @@ xhr.resource(id + '.json').get()(function (err, doc) {
         doc.items.forEach(function (item) {
             list.appendChild(createItem(item));
         });
+        handleTagFilter(hash.slice(1));
         dom.sortable(list, handleSort);
     }
 
@@ -239,6 +250,7 @@ function createItem(item) {
     var e        = dom.createElement('li'),
         clone    = template.cloneNode(true),
         remove   = clone.querySelector('a[data-action="remove"]'),
+        tagList  = clone.querySelector('ul.tags'),
         checkbox = clone.querySelector('input');
 
     if (item.completed) {
@@ -251,7 +263,24 @@ function createItem(item) {
     clone.setAttribute('style', '');
 
     for (var k in item) {
-        clone.setAttribute('data-' + k, item[k]);
+        clone.setAttribute('data-' + k, Array.isArray(item[k]) ?
+                            item[k].join(' ') : item[k]);
+    }
+
+    if (item.tags) {
+        item.tags.forEach(function (tag) {
+            var a  = dom.createElement('a', { href: '#' + tag }, tag),
+                li = dom.createElement('li');
+            li.setAttribute('data-tag', tag);
+            li.appendChild(a);
+            a.onclick = function () {
+                if (window.location.hash.slice(1) === tag) {
+                    window.location.hash = '';
+                    return false;
+                }
+            };
+            tagList.appendChild(li);
+        });
     }
 
     e.appendChild(clone);
@@ -282,4 +311,37 @@ function createItem(item) {
 function handleSort(title, to) {
     return changes.push({ type: 'sort', title: title, to: to });
 }
+function handleTagFilter(filter) {
+    var child, tag;
+
+    var active = list.querySelectorAll('li.active');
+    for (var i = 0; i < active.length; i++) {
+        dom.removeClass(active[i], 'active');
+    }
+
+    for (var i = 0; i < list.childElementCount; i++) {
+        child = list.children[i];
+
+        if (filter) {
+            tag = child.querySelector('[data-tag=' + filter + ']');
+            tags = child.firstChild.getAttribute('data-tags');
+
+            if (tags && (tags.split(' ').indexOf(filter) !== -1)) {
+                dom.addClass(tag, 'active');
+                dom.show(child);
+            } else {
+                dom.hide(child);
+            }
+        } else {
+            tag && dom.removeClass(tag, 'active');
+            dom.show(child);
+        }
+    }
+}
+setInterval(function () {
+    if (window.location.hash !== hash) {
+        hash = window.location.hash;
+        handleTagFilter(hash.slice(1));
+    }
+}, 10);
 

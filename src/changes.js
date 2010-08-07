@@ -52,7 +52,8 @@ this.get = function (res, id, params) {
 this.handlers = {
     insert: function (doc, change) {
         if (doc.items.length < 256) {
-            doc.items.unshift({ title: sanitize(change.value) });
+            if (! Array.isArray(change.tags)) { return }
+            doc.items.unshift({ title: sanitize(change.value), tags: change.tags });
         }
     },
     title: function (doc, change) {
