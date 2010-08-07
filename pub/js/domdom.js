@@ -127,7 +127,7 @@ dom.getIndex = function (e) {
     return i;
 };
 dom.removeClass = function (e, name) {
-    e.setAttribute('class', e.className.replace(name, ''));
+    e.className && e.setAttribute('class', e.className.replace(name, ''));
 };
 dom.addClass = function (e, name) {
     if (e.className.indexOf(name) === -1) {
@@ -156,12 +156,14 @@ dom.getPosition = function (e) {
     return { x: left, y: top };
 }
 
-dom.createElement = function (name, attrs) {
+dom.createElement = function (name, attrs, html) {
     var e = document.createElement(name);
 
     for (var a in (attrs || {})) {
         e[a] = attrs[a];
     }
+    html && (e.innerHTML = html);
+
     return e;
 };
 
@@ -188,4 +190,10 @@ dom.disableSelection = function (element) {
 dom.enableSelection = function (element) {
     element.onselectstart = null;
     element.unselectable = "off";
+};
+dom.show = function (e) {
+    return e.style.display = '';
+};
+dom.hide = function (e) {
+    return e.style.display = 'none';
 };
