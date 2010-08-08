@@ -78,7 +78,7 @@ var changes    = {
 };
 
 var titleHasFocus = false;
-var tagPattern = /#[^#\s]+/g;
+var tagPattern = /\B#[a-zA-Z0-9_-]+\b/g;
 
 //
 // New Item
