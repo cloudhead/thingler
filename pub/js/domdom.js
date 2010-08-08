@@ -95,7 +95,7 @@ dom.draggable = function (elem) {
         dom.addClass(dom.sorting.element, 'unselectable');
         dom.addClass(this,                'ghost');
 
-        dom.dragging.index   = dom.getIndex(this);
+        dom.dragging.index   = list.children.indexOf(this);
         dom.dragging.offset  = { x: e.pageX - pos.x, y: e.pageY - pos.y };
         dom.dragging.element = clone;
         dom.dragging.target  = this;
@@ -106,15 +106,6 @@ dom.draggable = function (elem) {
     };
 };
 
-dom.getIndex = function (e) {
-    var i = 0;
-
-    while (e.previousSibling) {
-        i ++;
-        e = e.previousSibling;
-    }
-    return i;
-};
 dom.removeClass = function (e, name) {
     if (! e.className) { return }
 
@@ -139,7 +130,7 @@ dom.getPosition = function (e) {
 
     var cached = null;
 
-    if (cached = dom.sorting.positions[dom.getIndex(e)]) {
+    if (cached = dom.sorting.positions[list.children.indexOf(e)]) {
         return cached;
     }
 
@@ -206,11 +197,17 @@ NodeList.prototype.forEach = function (fun) {
 NodeList.prototype.map = function (fun) {
     return Array.prototype.map.call(this, fun);
 };
+NodeList.prototype.indexOf = function (obj) {
+    return Array.prototype.indexOf.call(this, obj);
+};
 HTMLCollection.prototype.forEach = function (fun) {
     return Array.prototype.forEach.call(this, fun);
 };
 HTMLCollection.prototype.map = function (fun) {
     return Array.prototype.map.call(this, fun);
+};
+HTMLCollection.prototype.indexOf = function (obj) {
+    return Array.prototype.indexOf.call(this, obj);
 };
 
 //
