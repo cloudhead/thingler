@@ -14,13 +14,11 @@ dom.sorting = {
 };
 
 dom.sortable = function (list, callback) {
-    var items = list.children;
-
     dom.sorting.element = list;
     dom.sorting.callback = callback;
     dom.sorting.count = list.childElementCount;
 
-    for (var i = 0; i < items.length; i++) { dom.draggable(items[i]) }
+    list.children.forEach(dom.draggable);
 };
 
 document.onmouseup = function () {
@@ -36,10 +34,7 @@ document.onmouseup = function () {
         dom.dragging.element = null;
         dom.dragging.offset  = null;
 
-        // Re-enable text selection
-        for (var i = 0; i < list.childElementCount; i++) {
-            dom.enableSelection(list.children[i]);
-        }
+        list.children.forEach(dom.enableSelection);
     }
 };
 document.onmousemove = function (e) {
@@ -76,11 +71,7 @@ document.onmousemove = function (e) {
 };
 
 dom.refreshPositions = function (elem) {
-    dom.sorting.positions = [];
-
-    for (var i = 0; i < elem.childElementCount; i++) {
-        dom.sorting.positions.push(dom.getPosition(elem.children[i]));
-    }
+    dom.sorting.positions = elem.children.map(dom.getPosition);
     return false;
 };
 
@@ -110,9 +101,7 @@ dom.draggable = function (elem) {
         dom.dragging.target  = this;
 
         // Disable text selection while dragging
-        for (var i = 0; i < dom.sorting.element.childElementCount; i++) {
-            dom.disableSelection(dom.sorting.element.children[i]);
-        }
+        dom.sorting.element.children.forEach(dom.disableSelection);
         document.onmousemove(e);
     };
 };
@@ -197,3 +186,28 @@ dom.show = function (e) {
 dom.hide = function (e) {
     return e.style.display = 'none';
 };
+
+//
+// DOM Prototype Extensions
+//
+NodeList.prototype.forEach = function (fun) {
+    return Array.prototype.forEach.call(this, fun);
+};
+NodeList.prototype.map = function (fun) {
+    return Array.prototype.map.call(this, fun);
+};
+HTMLCollection.prototype.forEach = function (fun) {
+    return Array.prototype.forEach.call(this, fun);
+};
+HTMLCollection.prototype.map = function (fun) {
+    return Array.prototype.map.call(this, fun);
+};
+
+//
+// Object & Array ECMA 5 methods
+//
+if (! Array.isArray) {
+    Array.isArray = function (obj) {
+        return obj instanceof Array;
+    };
+}

@@ -122,14 +122,14 @@ xhr.resource(id + '.json').get()(function (err, doc) {
 
                     } else {
                         go('page');
-                        document.getElementById('not-found').style.display = 'none';
+                        dom.hide(document.getElementById('not-found'));
                         initialize(doc);
                     }
                 });
                 return false;
             };
         } else {
-            create.style.display = 'none';
+            dom.hide(create);
         }
     } else {
         go('page');
@@ -233,7 +233,7 @@ document.querySelector('[data-action="about"]').onclick = function () {
     if (about.style.display !== 'block') {
         about.style.display = 'block';
     } else {
-        about.style.display = 'none';
+        dom.hide(about);
     }
     return false;
 };
@@ -312,16 +312,13 @@ function handleSort(title, to) {
     return changes.push({ type: 'sort', title: title, to: to });
 }
 function handleTagFilter(filter) {
-    var child, tag;
+    var child, tag, tags;
 
-    var active = list.querySelectorAll('li.active');
-    for (var i = 0; i < active.length; i++) {
-        dom.removeClass(active[i], 'active');
-    }
+    list.querySelectorAll('li.active').forEach(function (e) {
+        dom.removeClass(e, 'active');
+    });
 
-    for (var i = 0; i < list.childElementCount; i++) {
-        child = list.children[i];
-
+    list.children.forEach(function (child) {
         if (filter) {
             tag = child.querySelector('[data-tag=' + filter + ']');
             tags = child.firstChild.getAttribute('data-tags');
@@ -336,8 +333,12 @@ function handleTagFilter(filter) {
             tag && dom.removeClass(tag, 'active');
             dom.show(child);
         }
-    }
+    });
 }
+
+//
+// Check the hashtag every 10ms, for changes
+//
 setInterval(function () {
     if (window.location.hash !== hash) {
         hash = window.location.hash;
