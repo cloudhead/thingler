@@ -116,11 +116,21 @@ dom.getIndex = function (e) {
     return i;
 };
 dom.removeClass = function (e, name) {
-    e.className && e.setAttribute('class', e.className.replace(name, ''));
+    if (! e.className) { return }
+
+    var classes = e.className.split(' '),
+        index = classes.indexOf(name);
+
+    if (index !== -1) {
+        classes.splice(index, 1);
+        e.setAttribute('class', classes.join(' '));
+    }
 };
 dom.addClass = function (e, name) {
-    if (e.className.indexOf(name) === -1) {
-        e.setAttribute('class', e.className.split(' ').concat(name).join(' ').trim());
+    var classes = e.className ? e.className.split(' ') : [];
+
+    if (classes.indexOf(name) === -1) {
+        e.setAttribute('class', classes.concat(name).join(' ').trim());
     }
 };
 dom.getPosition = function (e) {
