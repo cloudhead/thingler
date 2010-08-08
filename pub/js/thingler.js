@@ -69,8 +69,12 @@ var clock = {
 var rev        = null;
 var changes    = {
     data:  [],
-    push:  function (change) { this.data.push(change); clock.tick() },
-    clear: function ()       { return this.data = [] }
+    push:  function (type, change) {
+        change.type = type;
+        this.data.push(change);
+        clock.tick();
+    },
+    clear: function ()             { return this.data = [] }
 };
 
 var titleHasFocus = false;
@@ -92,7 +96,7 @@ input.addEventListener('keydown', function (e) {
             timestamp: Date.now()
         });
 
-        changes.push({ type: 'insert', tags: tags, value: value });
+        changes.push('insert', { tags: tags, value: value });
         list.insertBefore(item, list.firstChild);
         input.value = '';
         dom.flash(item);
@@ -109,7 +113,7 @@ title.addEventListener('focus', function (e) {
 }, false);
 title.addEventListener('blur', function (e) {
     titleHasFocus = false;
-    changes.push({ type: 'title', value: title.value });
+    changes.push('title', { value: title.value });
 }, false);
 
 xhr.resource(id + '.json').get()(function (err, doc) {
@@ -288,17 +292,17 @@ function createItem(item) {
     // Remove Item
     remove.onclick = function () {
         list.removeChild(e);
-        changes.push({ type: 'remove', title: item.title });
+        changes.push('remove', { title: item.title });
         return false;
     };
 
     // Check Item
     checkbox.addEventListener('click', function () {
         if (this.checked) {
-            changes.push({ type: 'check', title: item.title });
+            changes.push('check', { title: item.title });
             clone.setAttribute('class', 'completed');
         } else {
-            changes.push({ type: 'uncheck', title: item.title });
+            changes.push('uncheck', { title: item.title });
             clone.setAttribute('class', '');
         }
     }, false);
@@ -309,7 +313,7 @@ function createItem(item) {
 }
 
 function handleSort(title, to) {
-    return changes.push({ type: 'sort', title: title, to: to });
+    return changes.push('sort', { title: title, to: to });
 }
 function handleTagFilter(filter) {
     var child, tag, tags;
