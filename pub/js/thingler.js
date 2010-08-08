@@ -307,9 +307,20 @@ function createItem(item) {
         }
     }, false);
 
-    clone.querySelector('label').innerHTML = item.title;
+    clone.querySelector('label').innerHTML = markup(item.title);
 
     return e;
+}
+function markup(str) {
+    return str.replace(/\*\*((?:\\\*|\*[^*]|[^*])+)\*\*/g, function (_, match) {
+        return '<strong>' + match.replace(/\\\*\*/g, '*') + '</strong>';
+    }).replace(/\*((?:\\\*|[^*])+)\*/g, function (_, match) {
+        return '<em>' + match.replace(/\\\*/g, '*') + '</em>';
+    }).replace(/\b_((?:\\\_|[^_])+)_\b/g, function (_, match) {
+        return '<em>' + match.replace(/\\_/g, '_') + '</em>';
+    }).replace(/`((?:\\`|[^`])+)`/g, function (_, match) {
+        return '<code>' + match.replace(/\\`/g, '`') + '</code>';
+    });
 }
 
 function handleSort(title, to) {
