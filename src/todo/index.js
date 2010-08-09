@@ -30,3 +30,23 @@ this.put = function (res, id, params) {
         }
     });
 };
+
+this.protect = function (res, id, params) {
+    todo.get(id, function (e, doc) {
+        new(todo.Todo)(doc).update({
+            password: params.password
+        }).save(function (e, doc) {
+            res.send(200);
+        });
+    });
+};
+
+this.unprotect = function (res, id, params) {
+    todo.get(id, function (e, doc) {
+        new(todo.Todo)(doc).update({
+            password: null
+        }).save(function (e, doc) {
+            res.send(200);
+        });
+    });
+};

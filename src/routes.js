@@ -1,4 +1,5 @@
 var todo  = require('./todo'),
+    session = require('./session'),
     changes = require('./changes');
 //
 // Routing table
@@ -9,6 +10,14 @@ this.map = function () {
 
     // List
     this.path(/^([a-zA-Z0-9-]+)(?:\.json)?/, function () {
+        // Password-protect a list
+        this.put('/password').bind (todo.protect);
+        this.del('/password').bind (todo.unprotect);
+
+        // Create/Destroy session
+        this.post('/session').bind (session.post);
+        this.del('/session').bind  (session.del);
+
         // Retrieve the todo list
         this.get().bind  (todo.get);
 
