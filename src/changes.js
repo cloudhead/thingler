@@ -1,10 +1,10 @@
 var db = require('./db').database;
-var todos = require('./todo/collection');
+var todo = require('./todo').resource;
 
 var cache = {};
 
 this.post = function (res, id, params) {
-    todos.get(id, function (err, doc) {
+    todo.get(id, function (err, doc) {
         if (err) { return res.send(doc.headers.status, {}, err) }
 
         // Apply all the changes to the document
@@ -18,7 +18,7 @@ this.post = function (res, id, params) {
             db.put(id, doc, function (err, doc) {
                 if (err) { return res.send(doc.headers.status, {}, err) }
                 reply(doc.rev);
-                todos.clear(id);
+                todo.clear(id);
             });
         } else {
             reply(doc._rev);

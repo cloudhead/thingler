@@ -6,7 +6,7 @@ var Buffer = require('buffer').Buffer;
 var journey = require('journey'),
     static = require('node-static');
 
-var todo = require('./todo/collection'),
+var todo = require('./todo').resource,
     routes = require('./routes');
 
 var options = {
