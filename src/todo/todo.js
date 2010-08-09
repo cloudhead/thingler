@@ -1,5 +1,5 @@
 
-var uuid = require('./uuid');
+var uuid = require('../uuid');
 
 require.paths.unshift(__dirname + '/..');
 
