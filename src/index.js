@@ -7,6 +7,7 @@ var journey = require('journey'),
     static = require('node-static');
 
 var todo = require('./todo').resource,
+    session = require('./session/session'),
     routes = require('./routes');
 
 var options = {
@@ -58,9 +59,12 @@ this.server = require('http').createServer(function (request, response) {
                         }
                     });
                 } else {
-                    response.writeHead(result.status, result.headers);
-                    response.end(result.body);
-                    clearTimeout(timer);
+                    session.create(request, function (header) {
+                        if (header) { result.headers['Set-Cookie'] = header['Set-Cookie'] }
+                        response.writeHead(result.status, result.headers);
+                        response.end(result.body);
+                        clearTimeout(timer);
+                    });
                 }
             });
         }

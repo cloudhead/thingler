@@ -11,6 +11,11 @@ var about = document.getElementById('about');
 var create = document.getElementById('create');
 var footer = document.querySelector('footer');
 var hash   = window.location.hash;
+var locked = false;
+
+var lock            = document.getElementById('lock');
+var passwordProtect = document.getElementById('password-protect');
+var authenticate    = document.getElementById('password-authenticate');
 
 //
 // The Great Synchronization Clock
@@ -117,7 +122,7 @@ title.addEventListener('blur', function (e) {
 }, false);
 
 xhr.resource(id + '.json').get()(function (err, doc) {
-    if (err) {
+    if (err === 404) {
         go('not-found');
         if (id.match(/^[a-zA-Z0-9-]+$/)) {
             create.onclick = function () {
@@ -135,16 +140,31 @@ xhr.resource(id + '.json').get()(function (err, doc) {
         } else {
             dom.hide(create);
         }
+    } else if (err === 401) {
+        authenticate.style.display = 'block';
+        authenticate.querySelector('input').focus();
+        authenticate.querySelector('input').onkeydown = function (e) {
+            var that = this;
+            if (e.keyCode === 13) {
+                xhr.resource(id + '/session')
+                   .post({ password: this.value })(function (e, doc) {
+                       if (e) {
+                           dom.addClass(that, 'error');
+                       } else {
+                           xhr.resource(id + '.json').get()(function (e, doc) {
+                               go('page');
+                               initialize(doc);
+                               dom.hide(authenticate);
+                           });
+                       }
+                   });
+            }
+        };
     } else {
         go('page');
 
-        footer.style.visibility = 'visible'
         initialize(doc);
 
-        // Initialize list
-        doc.items.forEach(function (item) {
-            list.appendChild(createItem(item));
-        });
         handleTagFilter(hash.slice(1));
         dom.sortable(list, handleSort);
     }
@@ -157,6 +177,20 @@ xhr.resource(id + '.json').get()(function (err, doc) {
         // Initialize title and revision number
         title.value = doc.title;
         rev         = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
+
+        if (doc.locked) {
+            dom.addClass(lock, 'locked');
+            locked = true;
+        } else {
+            lock.style.display = 'block';
+        }
+        // Initialize list
+        doc.items && doc.items.forEach(function (item) {
+            list.appendChild(createItem(item));
+        });
+
+        footer.style.visibility = 'visible'
+
         //
         // Start the Clock
         //
@@ -238,6 +272,44 @@ document.querySelector('[data-action="about"]').onclick = function () {
         about.style.display = 'block';
     } else {
         dom.hide(about);
+    }
+    return false;
+};
+
+document.querySelector('[data-action="close"]').onclick = function () {
+    dom.hide(this.parentNode.parentNode);
+    return false;
+};
+
+lock.onclick = function () {
+    var input = passwordProtect.querySelector('input');
+
+    if (locked) {
+        xhr.resource(id + '/password').del()(function (e, res) {
+            if (e) {
+
+            } else {
+                dom.removeClass(lock, 'locked');
+                locked = false;
+            }
+        });
+    } else {
+        passwordProtect.style.display = 'block';
+        input.focus();
+        input.onkeydown = function (e) {
+            if (e.keyCode === 13) {
+                xhr.resource(id + '/password').put({ password: input.value })(function (e, res) {
+                    if (e) {
+
+                    } else {
+                        dom.addClass(lock, 'locked');
+                        locked = true;
+                        passwordProtect.style.display = '';
+                    }
+                });
+                return false;
+            }
+        };
     }
     return false;
 };

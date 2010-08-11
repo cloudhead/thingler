@@ -8,7 +8,13 @@
     <link rel="icon" type="image/gif" href="/favicon.gif">
   </head>
   <body>
-    <header></header>
+    <header>
+      <a id="lock" href="#">
+        <span class="locked-hint">unlock this room</span>
+        <span class="unlocked-hint">lock this room</span>
+        <div></div>
+      </a>
+    </header>
 
     <div id="page">
       <input id="title" type="text" />
@@ -19,6 +25,22 @@
     <div id="not-found">
       <h1>I can't find what you're looking for.</h1>
       <p><a href="#" id="create">Would you like me to create a todo list here?</a></p>
+    </div>
+
+    <div id="password-protect" class="overlay">
+      <div class="password">
+        <a href="#" class="close" data-action="close">&#x2717;</a>
+        <label>What password would you like to use?</label>
+        <input type="password" name="" value="" />
+        <span></span>
+      </div>
+    </div>
+
+    <div id="password-authenticate" class="overlay">
+      <div class="password">
+        <label>Password?</label>
+        <input type="password" name="" value="" />
+      </div>
     </div>
 
     <footer>

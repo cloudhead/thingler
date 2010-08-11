@@ -39,7 +39,7 @@ this.Todo.prototype = {
 
 this.create = function (callback) {
     uuid.generate(function (id) {
-        cache[id] = new(exports.Todo);
+        cache[id] = new(exports.Todo)({ _id: id });
         callback(id);
     });
 };

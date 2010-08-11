@@ -1,4 +1,4 @@
-var db = require('../db').connection;
+var db = require('./db').connection;
 
 var cache = [];
 

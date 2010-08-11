@@ -1,6 +1,13 @@
 var todo  = require('./todo'),
     session = require('./session'),
     changes = require('./changes');
+
+function auth(callback) {
+    return function (res, id, params) {
+        var sess = session.resource.retrieve(this.request);
+        callback(res, id, params, sess);
+    };
+}
 //
 // Routing table
 //
@@ -11,23 +18,23 @@ this.map = function () {
     // List
     this.path(/^([a-zA-Z0-9-]+)(?:\.json)?/, function () {
         // Password-protect a list
-        this.put('/password').bind (todo.protect);
-        this.del('/password').bind (todo.unprotect);
+        this.put('/password').bind (auth(todo.protect));
+        this.del('/password').bind (auth(todo.unprotect));
 
         // Create/Destroy session
-        this.post('/session').bind (session.post);
-        this.del('/session').bind  (session.del);
+        this.post('/session').bind (auth(session.post));
+        this.del('/session').bind  (auth(session.del));
 
         // Retrieve the todo list
-        this.get().bind  (todo.get);
+        this.get().bind  (auth(todo.get));
 
         // Update the todo list
-        this.put().bind  (todo.put);
+        this.put().bind  (auth(todo.put));
 
         // Destroy the todo list
-        this.del().bind  (todo.del);
+        this.del().bind  (auth(todo.del));
 
         // Create a change
-        this.post().bind (changes.post);
+        this.post().bind (auth(changes.post));
     });
 };
