@@ -8,7 +8,7 @@ a{text-decoration:none;color:#cccccc;}
 #about{margin-top:-30px;font-size:14px;float:left;}
 h1{color:#3d4a5c;font-size:42px;}
 ul,li{list-style-type:none;padding:0;}
-body>header{position:absolute;width:800px;top:15px;font-weight:bold;color:#dddddd;display:block;padding:15px 0;margin:0;font-size:16px;}
+body>header{position:absolute;width:800px;top:15px;color:#dddddd;display:block;padding:15px 0;margin:0;font-size:16px;}
 body>footer{visibility:hidden;margin:30px 0;text-align:right;font-size:14px;color:#eaeaea;}body>footer p{margin:10px 0;}
 body>footer p:first-child{color:#dddddd;font-size:18px;}body>footer p:first-child:hover,body>footer p:first-child:hover a{color:#c9c9c9;}body>footer p:first-child:hover a:hover,body>footer p:first-child:hover a a:hover{color:#cc7766;border-bottom:1px solid #f9eeec;}
 body>footer a{color:#dddddd;border-bottom:1px solid #eee;}body>footer a:hover{color:#cc7766;border-bottom:1px solid #f9eeec;}
@@ -30,7 +30,8 @@ ul{-webkit-padding-start:0;}
 #page #list>li .actions{visibility:hidden;float:right;font-size:14px;height:48px;line-height:48px;}#page #list>li .actions a{border-bottom:1px solid #f4f4f4;font-family:Arial,sans-serif;margin-right:15px;text-decoration:none;color:#cccccc;}#page #list>li .actions a:hover{color:#cc7766;border-bottom:1px solid #f9eeec;}
 #page #list>li:last-child{border-bottom:0;}
 #page .completed label,#page .completed label a{color:#ccc;text-decoration:line-through;}
-input#new{width:782px;font-size:24px;padding:8px;outline:none;border:1px solid #dddddd;-webkit-box-shadow:0px 1px 2px #dddddd;-moz-box-shadow:0px 1px 2px #dddddd;box-shadow:0px 1px 2px #dddddd;}input#new:focus{-webkit-box-shadow:0px 2px 8px #dddddd;-moz-box-shadow:0px 2px 8px #dddddd;box-shadow:0px 2px 8px #dddddd;}
+input#new{width:782px;-webkit-box-shadow:0px 1px 2px #dddddd;-moz-box-shadow:0px 1px 2px #dddddd;box-shadow:0px 1px 2px #dddddd;}input#new:focus{-webkit-box-shadow:0px 2px 8px #dddddd;-moz-box-shadow:0px 2px 8px #dddddd;box-shadow:0px 2px 8px #dddddd;}
+input#new,input[type="password"]{font-size:24px;padding:8px;outline:none;border:1px solid #dddddd;}
 input[type="checkbox"]{font-size:22px;}
 a[data-action="remove"]{padding:8px;border:0 !important;}a[data-action="remove"]:hover{border:0 !important;}
 #about{display:none;margin-top:0px;text-align:right;}#about p{font-size:14px !important;color:#aaaaaa;line-height:22px;}#about p a{border-bottom:1px dashed #dddddd;font-family:Arial,sans-serif;color:#bebebe;}#about p a:hover{color:#cc7766;border-bottom:1px solid #f9eeec;}
@@ -38,3 +39,6 @@ a[data-action="remove"]{padding:8px;border:0 !important;}a[data-action="remove"]
 .dragging .actions{visibility:hidden;}
 .ghost{margin-top:-1px;border-bottom:1px dashed #dddddd !important;border-top:1px dashed #dddddd !important;}.ghost label{color:#dddddd !important;}
 .ghost .tags{color:#dddddd !important;}.ghost .tags li{background-color:#fefefe !important;border-color:#eeeeee !important;}
+div.password{position:absolute;top:90px;left:150px;width:600px;padding:60px;background-color:white;-webkit-box-shadow:0 0px 30px #dddddd;-moz-box-shadow:0 0px 30px #dddddd;box-shadow:0 0px 30px #dddddd;-webkit-border-radius:8px;-moz-border-radius:8px;border-radius:8px;}div.password label{font-weight:bold;color:#52637a;font-size:32px;display:block;padding-bottom:30px;}
+div.password input{width:570px;-webkit-border-radius:8px;-moz-border-radius:8px;border-radius:8px;}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(255, 255, 255, 0.8);}
