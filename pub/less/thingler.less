@@ -1,10 +1,12 @@
 @yellow: hsl(60, 85%, 97%);
+@red: hsl(10, 50%, 60%);
 @dark-yellow: hsl(hue(@yellow), 55%, 92%);
 @black: hsl(215, 20%, 30%);
 @dark-blue: hsl(225, 50%, 40%);
 @light-grey: #ddd;
 @medium-grey: #ccc;
 @dark-grey: #aaa;
+@white: #fafafa;
 @page-width: 800px;
 
 .box-shadow(@x, @y, @blur, @color) {
@@ -35,6 +37,7 @@ body {
     font-size: 24px;
     width: @page-width;
     margin: 0 auto;
+    background-color: @white;
 }
 body > div {
     display: none;
@@ -70,7 +73,6 @@ body > header {
     position: absolute;
     width: @page-width;
     top: 15px;
-    font-weight: bold;
     color: @light-grey;
     display: block;
     padding: 15px 0;
@@ -122,6 +124,10 @@ ul {
         margin-left: -1px;
         padding: 0.25em 1px;
         width: @page-width - 4px;
+        background-color: @white;
+        &:focus {
+            background-color: white;
+        }
     }
     a#show-everything {
         font-size: 14px;
@@ -175,7 +181,7 @@ ul {
         font-family: Georgia, 'Times New Roman', serif;
         padding: 0 5px;
         cursor: move;
-        background-color: white;
+        background-color: @white;
         &:hover {
             background-color: @yellow;
             .actions {
@@ -199,7 +205,7 @@ ul {
         height: auto;
         border-bottom: 1px dotted @light-grey;
         &:hover {
-            .tags li a { color: darken(@color, 5%); background-color: white }
+            .tags li a { color: darken(@color, 5%); background-color: @white }
         }
         .tags {
             @padding-v: 4px;
@@ -253,7 +259,7 @@ ul {
                 text-decoration: none;
                 color: @medium-grey;
                 &:hover {
-                    color: hsl(10, 50%, 60%);
+                    color: @red;
                     border-bottom: 1px solid hsl(10, 50%, 95%);
                 }
             }
@@ -271,14 +277,16 @@ ul {
 }
 input#new {
     width: @page-width - 18px;
-    font-size: 24px;
-    padding: 8px;
-    outline: none;
-    border: 1px solid @light-grey;
     &:focus {
         .box-shadow(0px, 2px, 8px, @light-grey);
     }
     .box-shadow(0px, 1px, 2px, @light-grey);
+}
+input#new, input[type="password"] {
+    font-size: 24px;
+    padding: 8px;
+    outline: none;
+    border: 1px solid @light-grey;
 }
 input[type="checkbox"] {
     font-size: 22px;
