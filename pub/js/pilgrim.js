@@ -56,11 +56,14 @@ var pilgrim = (function () {
         };
     };
 
-    ["get", "put", "post", "del"].forEach(function (m) {
+    ["get", "put", "post"].forEach(function (m) {
         Context.prototype[m] = function (data) {
             return this.request.call(this, m, data);
         };
     });
+    Context.prototype.del = function (data) {
+        return this.request.call(this, 'delete', data);
+    };
 
     //
     // Client
@@ -104,7 +107,7 @@ var pilgrim = (function () {
             // Success
             if (this.status >= 200 && this.status < 300) {
                 if (typeof(callback) === 'function') {
-                    callback(null, JSON.parse(that.body));
+                    callback(null, that.body ? JSON.parse(that.body) : {});
                 }
             // Error
             } else {
