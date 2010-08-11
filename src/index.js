@@ -33,12 +33,17 @@ this.server = require('http').createServer(function (request, response) {
         // of the request, send a 500 back.
         var timer = setTimeout(function () {
             if (! response.finished) {
-                file.serveFile('/error.html', request, response);
+                if (request.headers.accept.indexOf('application/json') !== -1) {
+                    response.writeHead(500, {});
+                    response.end(JSON.stringify({error: 500}));
+                } else {
+                    file.serveFile('/error.html', 500, {}, request, response);
+                }
             }
         }, 5000);
 
         if (/MSIE [0-7]/.test(request.headers['user-agent'])) { // Block old IE
-            file.serveFile('/upgrade.html', request, response);
+            file.serveFile('/upgrade.html', 200, {}, request, response);
             clearTimeout(timer);
         } else if (request.url === '/') {
             todo.create(function (id) {
@@ -54,7 +59,7 @@ this.server = require('http').createServer(function (request, response) {
                 if (result.status === 406) { // A request for non-json data
                     file.serve(request, response, function (err, result) {
                         if (err) {
-                            file.serveFile('/index.html', request, response);
+                            file.serveFile('/index.html', 200, {}, request, response);
                             clearTimeout(timer);
                         }
                     });
