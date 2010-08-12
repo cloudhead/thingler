@@ -1,134 +1,108 @@
 //
-// pilgrim - a stateful javascript REST library for the browser
+// ~ pilgrim.js ~
+//
+//   stateful xhr client
 //
 var pilgrim = (function () {
-    var exports = {};
-
-    function Context(ctx, ident) {
-        if (ctx) {
-            this.host = ctx.host;
-            this.headers = ctx.headers;
-            this.path = ctx.path.slice(0);
-
-            if (ident && ident !== '/') {
-                this.path.push(ident);
-            }
-        } else {
-            this.path = [];
-        }
-    }
-
-    function resource(name) {
-        var context = new(Context)(this, name);
-
-        context.id = function () {
-            return id.apply(context, arguments);
-        };
-        return context;
-    }
-    function id(n) {
-        var context = new(Context)(this, n);
-
-        context.resource = function () {
-            return resource.apply(context, arguments);
-        };
-        return context;
-    }
-
-    Context.prototype.url = function () {
-        return this.host + '/' + this.path.join('/');
-    };
-
-    Context.prototype.request = function (method, data, headers) {
-        var query = [], url = this.url();
-
-        if (method === 'get' && data) {
-            for (var k in data) {
-                query.push(k + '=' + data[k]);
-            }
-            url += '?' + query.join('&');
-            data = null;
-        }
-
-        return function (callback) {
-            return new(pilgrim.XHR)
-                      (method, url, data, headers || {}).send(callback);
-        };
-    };
-
-    ["get", "put", "post"].forEach(function (m) {
-        Context.prototype[m] = function (data) {
-            return this.request.call(this, m, data);
-        };
-    });
-    Context.prototype.del = function (data) {
-        return this.request.call(this, 'delete', data);
-    };
-
     //
     // Client
     //
-    exports.Client = function Client(host, options) {
+    this.Client = function Client(host, options) {
         if (host && (typeof(host) === 'object')) { options = host, host = null }
 
         options = options || {};
-        this.context = new(Context);
-        this.context.headers = { accept: 'application/json' };
-        this.context.host = host ? 'http://' + host.replace('http://', '') : '';
-    };
-    exports.Client.prototype.resource = function (name) {
-        return resource.call(this.context, name);
-    };
 
+        this.headers   = options.headers   || {};
+        this.extension = options.extension || '';
+        this.host      = host ? 'http://' + host.replace('http://', '') : '';
+    };
+    this.Client.prototype.resource = function (path) {
+        return this.path(path + this.extension);
+    };
+    this.Client.prototype.path = function (path) {
+        var that = this;
+
+        return {
+            path: function (p) { return that.path([path, p].join('/')) },
+
+            get:  function (data, callback) { this.request('get',    data, callback) },
+            put:  function (data, callback) { this.request('put',    data, callback) },
+            post: function (data, callback) { this.request('post',   data, callback) },
+            del:  function (data, callback) { this.request('delete', data, callback) },
+            head: function (data, callback) { this.request('head',   data, callback) },
+
+            request: function (method /* [data], [callback] */) {
+                var query = [], args = Array.prototype.slice.call(arguments, 1)
+                                            .filter(function (a) { return a });
+
+                var callback = args.pop() || function () {},
+                    data     = args.shift();
+
+                path = (that.host + '/' + path).replace('//', '/');
+
+                if (method === 'get' && data) {
+                    console.log(data)
+                    for (var k in data) {
+                        query.push(k + '=' + encodeURIComponent(data[k]));
+                    }
+                    path += '?' + query.join('&');
+                    data = null;
+                }
+                return new(pilgrim.XHR)
+                          (method, path, data, that.headers).send(callback);
+            }
+        };
+    };
     //
     // XHR
     //
-    exports.XHR = function XHR(method, url, data, headers) {
+    this.XHR = function XHR(method, url, data, headers) {
         this.method = method.toLowerCase();
-        this.url = url;
-        this.data = data || {};
-        this.xhr = new(XMLHttpRequest);
+        this.url    = url;
+        this.data   = data || {};
+
+        if (window.XMLHttpRequest) {
+            this.xhr = new(XMLHttpRequest);
+        } else {
+            this.xhr = new(ActiveXObject)("MSXML2.XMLHTTP.3.0");
+        }
+
         this.headers = {
             'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
+            'Accept':           'application/json'
         };
-
-        if (headers.accept) { this.headers['Accept'] = headers.accept }
+        for (var k in headers) { this.headers[k] = headers[k] }
     };
-    exports.XHR.prototype.send = function (callback) {
-        var that = this;
+    this.XHR.prototype.send = function (callback) {
+        this.data = JSON.stringify(this.data);
+
         this.xhr.open(this.method, this.url, true);
         this.xhr.onreadystatechange = function () {
             if (this.readyState != 4) { return }
 
-            that.body = this.responseText;
-            that.xml = this.responseXML;
+            var body = this.responseText ? JSON.parse(this.responseText) : {};
 
-            // Success
-            if (this.status >= 200 && this.status < 300) {
-                if (typeof(callback) === 'function') {
-                    callback(null, that.body ? JSON.parse(that.body) : {});
-                }
-            // Error
-            } else {
-                if (typeof(callback) === 'function') {
-                    callback(this.status);
-                }
+            if (this.status >= 200 && this.status < 300) { // Success
+                callback(null, body);
+            } else {                                       // Error
+                callback({ status: this.status, body: body, xhr: this });
             }
         };
 
-        if (this.method == 'post' || this.method == 'put') {
+        // Set content headers
+        if (this.method === 'post' || this.method === 'put') {
             this.headers['Content-Type'] = 'application/json';
         }
 
+        // Set user headers
         for (k in this.headers) {
             this.xhr.setRequestHeader(k, this.headers[k]);
         }
 
-        this.xhr.send(this.method === 'get' ? null : JSON.stringify(this.data));
+        // Dispatch request
+        this.xhr.send(this.method === 'get' ? null : this.data);
 
         return this;
     };
-
-    return exports;
-})();
+    return this;
+}).call({});
