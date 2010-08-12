@@ -17,12 +17,61 @@ var lock            = document.getElementById('lock');
 var passwordProtect = document.getElementById('password-protect');
 var authenticate    = document.getElementById('password-authenticate');
 
+var room = {
+    initialize: function (doc) {
+        // Initialize title and revision number
+        title.value = doc.title;
+        rev         = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
+
+        if (doc.locked) {
+            lock.addClass('locked');
+            locked = true;
+        } else {
+            lock.style.display = 'block';
+        }
+        // Initialize list
+        doc.items && doc.items.forEach(function (item) {
+            list.appendChild(createItem(item));
+        });
+
+        footer.style.visibility = 'visible'
+
+        //
+        // Start the Clock
+        //
+        clock.init(function (clock) {
+            xhr.resource(id).post({
+                rev:     rev || 0,
+                changes: changes.data
+            }, function (err, doc) {
+                if (err) {
+                    if (err.status !== 404) { console.log(err) }
+                } else if (doc && doc.commits) {
+                    rev = doc.rev || 0;
+
+                    if (doc.commits.length > 0) {
+                        doc.commits.forEach(function (commit) {
+                            commit.changes.forEach(function (change) {
+                                handlers[change.type](change);
+                            });
+                        });
+                        clock.activity();
+                    }
+                    changes.clear();
+                }
+                clock.synchronised();
+            });
+        });
+    }
+};
+
 //
 // The Great Synchronization Clock
 //
 var clock = {
     timer: null,
     interval: 1000,
+    synchronising: false,
     init: function (callback) {
         this.callback = callback;
         this.reset(1000);
@@ -54,7 +103,14 @@ var clock = {
     // Called on every interval tick.
     //
     tick: function () {
-        this.callback(this);
+        if (! this.synchronising) {
+            this.synchronising = true;
+            this.callback(this);
+        }
+    },
+
+    synchronised: function () {
+        this.synchronising = false;
     },
     //
     // Called on inbound & outbound activity.
@@ -132,7 +188,7 @@ xhr.path(id).get(function (err, doc) {
                     } else {
                         go('page');
                         dom.hide(document.getElementById('not-found'));
-                        initialize(doc);
+                        room.initialize(doc);
                     }
                 });
                 return false;
@@ -153,7 +209,7 @@ xhr.path(id).get(function (err, doc) {
                        } else {
                            xhr.resource(id).get(function (e, doc) {
                                go('page');
-                               initialize(doc);
+                               room.initialize(doc);
                                dom.hide(authenticate);
                            });
                        }
@@ -163,7 +219,7 @@ xhr.path(id).get(function (err, doc) {
     } else {
         go('page');
 
-        initialize(doc);
+        room.initialize(doc);
 
         handleTagFilter(hash.slice(1));
         dom.sortable(list, handleSort);
@@ -172,50 +228,6 @@ xhr.path(id).get(function (err, doc) {
     function go(page) {
         document.getElementById(page).style.display = 'block';
         if (page === 'page') { input.focus() }
-    }
-    function initialize(doc) {
-        // Initialize title and revision number
-        title.value = doc.title;
-        rev         = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
-
-        if (doc.locked) {
-            dom.addClass(lock, 'locked');
-            locked = true;
-        } else {
-            lock.style.display = 'block';
-        }
-        // Initialize list
-        doc.items && doc.items.forEach(function (item) {
-            list.appendChild(createItem(item));
-        });
-
-        footer.style.visibility = 'visible'
-
-        //
-        // Start the Clock
-        //
-        clock.init(function (clock) {
-            xhr.resource(id).post({
-                rev:     rev || 0,
-                changes: changes.data
-            }, function (err, doc) {
-                if (err) {
-                    if (err.status !== 404) { console.log(err) }
-                } else if (doc && doc.commits) {
-                    rev = doc.rev || 0;
-
-                    if (doc.commits.length > 0) {
-                        doc.commits.forEach(function (commit) {
-                            commit.changes.forEach(function (change) {
-                                handlers[change.type](change);
-                            });
-                        });
-                        clock.activity();
-                    }
-                    changes.clear();
-                }
-            });
-        });
     }
 });
 
