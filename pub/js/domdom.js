@@ -26,8 +26,8 @@ document.onmouseup = function () {
 
     if (dom.dragging.element) {
         list.removeChild(dom.dragging.element);
-        dom.removeClass(dom.dragging.target, 'ghost');
-        dom.removeClass(dom.sorting.element, 'unselectable');
+        dom.dragging.target.removeClass('ghost');
+        dom.sorting.element.removeClass('unselectable');
 
         dom.sorting.callback(dom.dragging.element.firstChild.getAttribute('data-title'), dom.dragging.index);
 
@@ -91,9 +91,9 @@ dom.draggable = function (elem) {
 
         this.parentNode.appendChild(clone);
 
-        dom.addClass(clone,               'dragging');
-        dom.addClass(dom.sorting.element, 'unselectable');
-        dom.addClass(this,                'ghost');
+        this.addClass('ghost');
+        clone.addClass('dragging');
+        dom.sorting.element.addClass('unselectable');
 
         dom.dragging.index   = list.children.indexOf(this);
         dom.dragging.offset  = { x: e.pageX - pos.x, y: e.pageY - pos.y };
@@ -208,6 +208,12 @@ HTMLCollection.prototype.map = function (fun) {
 };
 HTMLCollection.prototype.indexOf = function (obj) {
     return Array.prototype.indexOf.call(this, obj);
+};
+HTMLElement.prototype.addClass = function (class) {
+    return dom.addClass(this, class);
+};
+HTMLElement.prototype.removeClass = function (class) {
+    return dom.removeClass(this, class);
 };
 
 //

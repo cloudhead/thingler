@@ -205,7 +205,7 @@ xhr.path(id).get(function (err, doc) {
                 xhr.resource(id).path('session')
                    .post({ password: this.value }, function (e, doc) {
                        if (e) {
-                           dom.addClass(that, 'error');
+                           that.addClass('error');
                        } else {
                            xhr.resource(id).get(function (e, doc) {
                                go('page');
@@ -301,7 +301,7 @@ lock.onclick = function () {
             if (e) {
 
             } else {
-                dom.removeClass(lock, 'locked');
+                lock.removeClass('locked');
                 locked = false;
             }
         });
@@ -314,7 +314,7 @@ lock.onclick = function () {
                     if (e) {
 
                     } else {
-                        dom.addClass(lock, 'locked');
+                        lock.addClass('locked');
                         locked = true;
                         passwordProtect.style.display = '';
                     }
@@ -414,7 +414,7 @@ function handleTagFilter(filter) {
     var child, tag, tags;
 
     list.querySelectorAll('li.active').forEach(function (e) {
-        dom.removeClass(e, 'active');
+        e.removeClass('active');
     });
 
     list.children.forEach(function (child) {
@@ -423,13 +423,13 @@ function handleTagFilter(filter) {
             tags = child.firstChild.getAttribute('data-tags');
 
             if (tags && (tags.split(' ').indexOf(filter) !== -1)) {
-                dom.addClass(tag, 'active');
+                tag.addClass('active');
                 dom.show(child);
             } else {
                 dom.hide(child);
             }
         } else {
-            tag && dom.removeClass(tag, 'active');
+            tag && tag.removeClass('active');
             dom.show(child);
         }
     });
