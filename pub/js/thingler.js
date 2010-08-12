@@ -1,13 +1,13 @@
 //
 // ~ thingler.js ~
 //
-var path  = window.location.pathname;
-var id    = path.slice(1);
-var xhr   = new(pilgrim.Client)({ mime: 'application/json' });
-var input = document.getElementById('new');
-var title = document.getElementById('title');
-var list  = document.getElementById('list');
-var about = document.getElementById('about');
+var path   = window.location.pathname;
+var id     = path.slice(1);
+var xhr    = new(pilgrim.Client)({ extension: '.json' });
+var input  = document.getElementById('new');
+var title  = document.getElementById('title');
+var list   = document.getElementById('list');
+var about  = document.getElementById('about');
 var create = document.getElementById('create');
 var footer = document.querySelector('footer');
 var hash   = window.location.hash;
@@ -121,12 +121,12 @@ title.addEventListener('blur', function (e) {
     changes.push('title', { value: title.value });
 }, false);
 
-xhr.resource(id + '.json').get()(function (err, doc) {
-    if (err === 404) {
+xhr.path(id).get(function (err, doc) {
+    if (err && err.status === 404) {
         go('not-found');
         if (id.match(/^[a-zA-Z0-9-]+$/)) {
             create.onclick = function () {
-                xhr.resource(id).put()(function (e, doc) {
+                xhr.resource(id).put(function (e, doc) {
                     if (e) {
 
                     } else {
@@ -140,18 +140,18 @@ xhr.resource(id + '.json').get()(function (err, doc) {
         } else {
             dom.hide(create);
         }
-    } else if (err === 401) {
+    } else if (err && err.status === 401) {
         authenticate.style.display = 'block';
         authenticate.querySelector('input').focus();
         authenticate.querySelector('input').onkeydown = function (e) {
             var that = this;
             if (e.keyCode === 13) {
-                xhr.resource(id + '/session')
-                   .post({ password: this.value })(function (e, doc) {
+                xhr.resource(id).path('session')
+                   .post({ password: this.value }, function (e, doc) {
                        if (e) {
                            dom.addClass(that, 'error');
                        } else {
-                           xhr.resource(id + '.json').get()(function (e, doc) {
+                           xhr.resource(id).get(function (e, doc) {
                                go('page');
                                initialize(doc);
                                dom.hide(authenticate);
@@ -198,9 +198,9 @@ xhr.resource(id + '.json').get()(function (err, doc) {
             xhr.resource(id).post({
                 rev:     rev || 0,
                 changes: changes.data
-            })(function (err, doc) {
+            }, function (err, doc) {
                 if (err) {
-                    if (err !== 404) { console.log(err) }
+                    if (err.status !== 404) { console.log(err) }
                 } else if (doc && doc.commits) {
                     rev = doc.rev || 0;
 
@@ -285,7 +285,7 @@ lock.onclick = function () {
     var input = passwordProtect.querySelector('input');
 
     if (locked) {
-        xhr.resource(id + '/password').del()(function (e, res) {
+        xhr.resource(id).path('password').del(function (e, res) {
             if (e) {
 
             } else {
@@ -298,7 +298,7 @@ lock.onclick = function () {
         input.focus();
         input.onkeydown = function (e) {
             if (e.keyCode === 13) {
-                xhr.resource(id + '/password').put({ password: input.value })(function (e, res) {
+                xhr.resource(id).path('password').put({ password: input.value }, function (e, res) {
                     if (e) {
 
                     } else {
