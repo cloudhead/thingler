@@ -73,7 +73,7 @@ this.save = function (id, callback) {
         } else {
             db.put(id, newDoc.json, function (e, doc) {
                 if (e) {
-                    callback(e);
+                    callback(e, doc);
                 } else {
                     callback(null, {
                         title: newDoc.title,

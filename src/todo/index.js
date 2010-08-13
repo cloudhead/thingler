@@ -38,7 +38,7 @@ this.put = function (res, id, params) {
         if (e) {
             res.send(doc.headers.status, {}, e);
         } else {
-            res.send(doc.headers.status, {}, doc);
+            res.send(doc.status, {}, doc);
         }
     });
 };
