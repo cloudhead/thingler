@@ -54,6 +54,9 @@ var room = {
             list.appendChild(createItem(item));
         });
 
+        handleTagFilter(hash.slice(1));
+        dom.sortable(list, handleSort);
+
         footer.style.visibility = 'visible'
 
         //
@@ -230,11 +233,7 @@ xhr.path(id).get(function (err, doc) {
         };
     } else {
         go('page');
-
         room.initialize(doc);
-
-        handleTagFilter(hash.slice(1));
-        dom.sortable(list, handleSort);
     }
 
     function go(page) {
@@ -275,11 +274,11 @@ var handlers = {
     },
     sort: function (change) {
         var elem  = find(change.title).parentNode,
-            index = dom.getIndex(elem),
+            index = elem.parentNode.children.indexOf(elem),
             ref   = list.children[change.to];
 
         if (change.to > index) {
-            if (change.to === list.children.length - 1) {
+            if (!ref || change.to === list.children.length - 1) {
                 list.appendChild(elem);
             } else {
                 list.insertBefore(elem, ref.nextSibling);
