@@ -25,9 +25,10 @@ var room = {
         rollback: function (changes) {
             this.data = changes.concat(this.data);
         },
-        push: function (type, change) {
+        push: function (type, change, callback) {
             change.type = type;
             change.ctime = Date.now();
+            change.callback = callback;
             this.data.push(change);
             clock.tick();
         },
@@ -80,6 +81,9 @@ var room = {
                     }
                 }
                 clock.synchronised();
+                changes.forEach(function (change) {
+                    change.callback && change.callback();
+                });
             });
         });
     }
