@@ -17,10 +17,6 @@ this.map = function () {
 
     // List
     this.path(/^([a-zA-Z0-9-]+)(?:\.json)?/, function () {
-        // Password-protect a list
-        this.put('/password').bind (auth(todo.protect));
-        this.del('/password').bind (auth(todo.unprotect));
-
         // Create/Destroy session
         this.post('/session').bind (auth(session.post));
         this.del('/session').bind  (auth(session.del));

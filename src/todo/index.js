@@ -2,7 +2,7 @@
 var sys = require('sys');
 
 var todo = require('./todo');
-var md5 = require('../md5');
+var db = require('../db');
 
 this.resource = todo;
 
@@ -43,23 +43,3 @@ this.put = function (res, id, params) {
     });
 };
 
-this.protect = function (res, id, params, session) {
-    todo.get(id, function (e, doc) {
-        new(todo.Todo)(doc).update({
-            password: md5.digest(params.password)
-        }).save(function (e, doc) {
-            session.authenticated.push(id);
-            res.send(200, {}, doc);
-        });
-    });
-};
-
-this.unprotect = function (res, id, params) {
-    todo.get(id, function (e, doc) {
-        new(todo.Todo)(doc).update({
-            password: null
-        }).save(function (e, doc) {
-            res.send(200);
-        });
-    });
-};

@@ -1,22 +1,43 @@
 var db = require('./db').database;
+var parseRev = require('./db').parseRev;
 var todo = require('./todo').resource;
+var md5 = require('./md5');
 
 var cache = {};
 
-this.post = function (res, id, params) {
+var hour = 3600 * 1000;
+
+// Remove commits older than an hour.
+// The maximum client polling time is one hour,
+// so by this time, all connected clients should
+// be up-to-date.
+setInterval(function () {
+    var now = Date.now();
+    Object.keys(cache).forEach(function (k) {
+        if (now - cache[k].ctime > hour) {
+            delete(cache[k]);
+        }
+    });
+}, hour);
+
+this.post = function (res, id, params, session) {
     todo.get(id, function (err, doc) {
         if (err) { return res.send(doc.headers.status, {}, err) }
 
+        var changes = params.changes;
+
         // Apply all the changes to the document
-        params.changes.forEach(function (change) {
+        changes.forEach(function (change) {
             if (validate(change)) {
-                exports.handlers[change.type](doc, change);
+                exports.handlers[change.type](doc, change, session);
             }
         });
 
-        if (params.changes.length > 0) {
+        if (changes.length > 0) {
             db.put(id, doc, function (err, doc) {
-                if (err) { return res.send(doc.headers.status, {}, err) }
+                if (err) {
+                    return res.send(doc.headers.status, {}, err);
+                }
                 reply(doc.rev);
                 todo.clear(id);
             });
@@ -29,10 +50,10 @@ this.post = function (res, id, params) {
 
             var dirty = cache[id].slice(0), status = 200;
 
-            rev = rev ? parseInt(rev.match(/^(\d+)-/)[1]) : 0;
+            rev = rev ? parseRev(rev) : 0;
 
-            if (params.changes.length > 0) {
-                cache[id].push({ rev: rev, changes: params.changes });
+            if (changes.length > 0) {
+                cache[id].push({ rev: rev, changes: changes, ctime: Date.now() });
                 status = 201;
             }
             res.send(status, {}, {
@@ -53,7 +74,7 @@ this.handlers = {
     insert: function (doc, change) {
         if (doc.items.length < 256) {
             if (! Array.isArray(change.tags)) { return }
-            doc.items.unshift({ title: sanitize(change.value), tags: change.tags });
+            doc.items.unshift({ title: sanitize(change.title), tags: change.tags });
         }
     },
     title: function (doc, change) {
@@ -83,13 +104,20 @@ this.handlers = {
         if (index !== -1) {
             doc.items.splice(index, 1);
         }
+    },
+    lock: function (doc, change, session) {
+        session.authenticated.push(doc._id);
+        doc.password = md5.digest(change.password);
+    },
+    unlock: function (doc, change, session) {
+        doc.password = null;
     }
 };
 
 function validate(change) {
     if (change.type && (change.type in exports.handlers)) {
-        if ('value' in change) {
-            if ((typeof(change.value) !== 'string') || change.value.length > 256) {
+        if ('title' in change) {
+            if ((typeof(change.title) !== 'string') || change.title.length > 256) {
                 return false;
             }
         }

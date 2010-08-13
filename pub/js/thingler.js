@@ -11,23 +11,39 @@ var about  = document.getElementById('about');
 var create = document.getElementById('create');
 var footer = document.querySelector('footer');
 var hash   = window.location.hash;
-var locked = false;
 
 var lock            = document.getElementById('lock');
 var passwordProtect = document.getElementById('password-protect');
 var authenticate    = document.getElementById('password-authenticate');
 
 var room = {
+    rev: null,
+    locked: false,
+    changes: {
+        data:  [],
+        rollback: function (changes) {
+            this.data = changes.concat(this.data);
+        },
+        push: function (type, change) {
+            change.type = type;
+            change.ctime = Date.now();
+            this.data.push(change);
+            clock.tick();
+        },
+        commit: function () {
+            var commit = this.data;
+            this.data = [];
+            return commit;
+        }
+    },
     initialize: function (doc) {
         // Initialize title and revision number
         title.value = doc.title;
-        rev         = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
+        room.rev    = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
 
         if (doc.locked) {
             lock.addClass('locked');
-            locked = true;
-        } else {
-            lock.style.display = 'block';
+            room.locked = true;
         }
         // Initialize list
         doc.items && doc.items.forEach(function (item) {
@@ -40,14 +56,16 @@ var room = {
         // Start the Clock
         //
         clock.init(function (clock) {
+            var changes = room.changes.commit();
             xhr.resource(id).post({
-                rev:     rev || 0,
-                changes: changes.data
+                rev:     room.rev || 0,
+                changes: changes
             }, function (err, doc) {
                 if (err) {
                     if (err.status !== 404) { console.log(err) }
+                    room.changes.rollback(changes);
                 } else if (doc && doc.commits) {
-                    rev = doc.rev || 0;
+                    room.rev = doc.rev || 0;
 
                     if (doc.commits.length > 0) {
                         doc.commits.forEach(function (commit) {
@@ -57,7 +75,6 @@ var room = {
                         });
                         clock.activity();
                     }
-                    changes.clear();
                 }
                 clock.synchronised();
             });
@@ -127,17 +144,6 @@ var clock = {
     }
 };
 
-var rev        = null;
-var changes    = {
-    data:  [],
-    push:  function (type, change) {
-        change.type = type;
-        this.data.push(change);
-        clock.tick();
-    },
-    clear: function ()             { return this.data = [] }
-};
-
 var titleHasFocus = false;
 var tagPattern = /\B#[a-zA-Z0-9_-]+\b/g;
 
@@ -174,7 +180,7 @@ title.addEventListener('focus', function (e) {
 }, false);
 title.addEventListener('blur', function (e) {
     titleHasFocus = false;
-    changes.push('title', { value: title.value });
+    room.changes.push('title', { value: title.value });
 }, false);
 
 xhr.path(id).get(function (err, doc) {
@@ -233,7 +239,7 @@ xhr.path(id).get(function (err, doc) {
 
 var handlers = {
     insert: function (change) {
-        var item = createItem({ title: change.value });
+        var item = createItem({ title: change.title, tags: change.tags });
         list.insertBefore(item, list.firstChild);
         dom.sortable(list, handleSort);
         dom.flash(item);
@@ -276,6 +282,15 @@ var handlers = {
             list.insertBefore(elem, ref);
         }
         dom.flash(elem);
+    },
+    lock: function (change) {
+        lock.addClass('locked');
+        room.locked = true;
+        passwordProtect.style.display = '';
+    },
+    unlock: function (change) {
+        lock.removeClass('locked');
+        room.locked = false;
     }
 };
 
@@ -296,29 +311,18 @@ document.querySelector('[data-action="close"]').onclick = function () {
 lock.onclick = function () {
     var input = passwordProtect.querySelector('input');
 
-    if (locked) {
-        xhr.resource(id).path('password').del(function (e, res) {
-            if (e) {
-
-            } else {
-                lock.removeClass('locked');
-                locked = false;
-            }
-        });
+    if (room.locked) {
+        room.changes.push('unlock', {});
+        handlers.unlock();
     } else {
+        input.disabled = false;
         passwordProtect.style.display = 'block';
         input.focus();
         input.onkeydown = function (e) {
-            if (e.keyCode === 13) {
-                xhr.resource(id).path('password').put({ password: input.value }, function (e, res) {
-                    if (e) {
-
-                    } else {
-                        lock.addClass('locked');
-                        locked = true;
-                        passwordProtect.style.display = '';
-                    }
-                });
+            if (e.keyCode === 13 && input.value) {
+                input.disabled = true;
+                room.changes.push('lock', { password: input.value });
+                handlers.lock();
                 return false;
             }
         };
@@ -376,17 +380,17 @@ function createItem(item) {
     // Remove Item
     remove.onclick = function () {
         list.removeChild(e);
-        changes.push('remove', { title: item.title });
+        room.changes.push('remove', { title: item.title });
         return false;
     };
 
     // Check Item
     checkbox.addEventListener('click', function () {
         if (this.checked) {
-            changes.push('check', { title: item.title });
+            room.changes.push('check', { title: item.title });
             clone.setAttribute('class', 'completed');
         } else {
-            changes.push('uncheck', { title: item.title });
+            room.changes.push('uncheck', { title: item.title });
             clone.setAttribute('class', '');
         }
     }, false);
@@ -408,7 +412,7 @@ function markup(str) {
 }
 
 function handleSort(title, to) {
-    return changes.push('sort', { title: title, to: to });
+    return room.changes.push('sort', { title: title, to: to });
 }
 function handleTagFilter(filter) {
     var child, tag, tags;
