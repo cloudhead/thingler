@@ -185,6 +185,7 @@ title.addEventListener('blur', function (e) {
 }, false);
 
 xhr.path(id).get(function (err, doc) {
+    var password = authenticate.querySelector('input');
     if (err && err.status === 404) {
         go('not-found');
         if (id.match(/^[a-zA-Z0-9-]+$/)) {
@@ -205,14 +206,18 @@ xhr.path(id).get(function (err, doc) {
         }
     } else if (err && err.status === 401) {
         authenticate.style.display = 'block';
-        authenticate.querySelector('input').focus();
-        authenticate.querySelector('input').onkeydown = function (e) {
+        password.focus();
+        password.onkeydown = function (e) {
             var that = this;
             if (e.keyCode === 13) {
+                password.addClass('disabled');
+                password.disabled = true;
                 xhr.resource(id).path('session')
                    .post({ password: this.value }, function (e, doc) {
                        if (e) {
                            that.addClass('error');
+                           password.removeClass('disabled');
+                           password.disabled = false;
                        } else {
                            xhr.resource(id).get(function (e, doc) {
                                go('page');
@@ -287,7 +292,6 @@ var handlers = {
     lock: function (change) {
         lock.addClass('locked');
         room.locked = true;
-        passwordProtect.style.display = '';
     },
     unlock: function (change) {
         lock.removeClass('locked');
@@ -317,12 +321,16 @@ lock.onclick = function () {
         handlers.unlock();
     } else {
         input.disabled = false;
+        input.removeClass('disabled');
         passwordProtect.style.display = 'block';
         input.focus();
         input.onkeydown = function (e) {
             if (e.keyCode === 13 && input.value) {
                 input.disabled = true;
-                room.changes.push('lock', { password: input.value });
+                input.addClass('disabled');
+                room.changes.push('lock', { password: input.value }, function () {
+                    passwordProtect.style.display = '';
+                });
                 handlers.lock();
                 return false;
             }
