@@ -9,6 +9,7 @@ var title  = document.getElementById('title');
 var list   = document.getElementById('list');
 var about  = document.getElementById('about');
 var create = document.getElementById('create');
+var header = document.querySelector('header');
 var footer = document.querySelector('footer');
 var hash   = window.location.hash;
 
@@ -45,6 +46,8 @@ var room = {
             lock.addClass('locked');
             room.locked = true;
         }
+        header.style.display = 'block';
+
         // Initialize list
         doc.items && doc.items.forEach(function (item) {
             list.appendChild(createItem(item));

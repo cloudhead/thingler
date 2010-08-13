@@ -1,5 +1,6 @@
 @yellow: hsl(60, 85%, 97%);
 @red: hsl(10, 50%, 60%);
+@light-red: #ee8167;
 @dark-yellow: hsl(hue(@yellow), 55%, 92%);
 @black: hsl(215, 20%, 30%);
 @dark-blue: hsl(225, 50%, 40%);
@@ -72,10 +73,9 @@ ul, li {
 body > header {
     position: absolute;
     width: @page-width;
-    top: 15px;
+    top: 22px;
     color: @light-grey;
     display: block;
-    padding: 15px 0;
     margin: 0;
     font-size: 16px;
 }
@@ -92,7 +92,7 @@ body > footer {
         &:hover, &:hover a {
             color: darken(@light-grey, 8%);
             a:hover {
-                color: hsl(10, 50%, 60%);
+                color: @light-red;
                 border-bottom: 1px solid hsl(10, 50%, 95%);
             }
         }
@@ -101,7 +101,7 @@ body > footer {
         color: @light-grey;
         border-bottom: 1px solid #eee;
         &:hover {
-            color: hsl(10, 50%, 60%);
+            color: @light-red;
             border-bottom: 1px solid hsl(10, 50%, 95%);
         }
     }
@@ -259,7 +259,7 @@ ul {
                 text-decoration: none;
                 color: @medium-grey;
                 &:hover {
-                    color: @red;
+                    color: @light-red;
                     border-bottom: 1px solid hsl(10, 50%, 95%);
                 }
             }
@@ -377,7 +377,7 @@ div.password {
         top: 15px;
         left: 10px;
         &:hover {
-            color: @red;
+            color: @light-red;
         }
     }
 }
@@ -398,12 +398,11 @@ div.password {
 #lock {
     text-align: right;
     float: right;
-    display: hidden;
     div {
         display: inline-block;
         width: 24px;
         height: 24px;
-        background: url(/images/lock.png) -24px 0 no-repeat;
+        background: url(/images/lock-24.png) 0 0 no-repeat;
         margin-left: 5px;
     }
     &.locked {
@@ -412,16 +411,20 @@ div.password {
             .locked-hint { display: inline }
             .unlocked-hint { display: none }
         }
+        span { color: @light-red }
         div {
-            background: url(/images/lock.png) 0 0 no-repeat;
+            background: url(/images/lock-24.png) -24px 0 no-repeat;
         }
     }
     &:hover {
         .locked-hint { display: none }
         .unlocked-hint { display: inline }
+        div {
+            background: url(/images/lock-24.png) -24px 0 no-repeat;
+        }
     }
     span {
-        color: #ddd;
+        color: @light-red;
         font-size: 14px;
         display: none;
         vertical-align: 1px;
