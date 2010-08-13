@@ -160,17 +160,11 @@ input.addEventListener('keydown', function (e) {
 
         value = value.replace(tagPattern, '').trim();
         tags = tags.map(function (tag) { return tag.slice(1) });
-        item = createItem({
-            title: value,
-            tags: tags,
-            timestamp: Date.now()
-        });
 
-        changes.push('insert', { tags: tags, value: value });
-        list.insertBefore(item, list.firstChild);
+        room.changes.push('insert', { tags: tags, title: value });
+
         input.value = '';
-        dom.flash(item);
-        dom.sortable(list, handleSort);
+        handlers.insert({ title: value, tags: tags });
     }
     return false;
 }, false);
