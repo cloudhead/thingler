@@ -328,7 +328,7 @@ lock.onclick = function () {
                 input.disabled = true;
                 input.addClass('disabled');
                 room.changes.push('lock', { password: input.value }, function () {
-                    passwordProtect.style.display = '';
+                    dom.hide(passwordProtect);
                 });
                 handlers.lock();
                 return false;
