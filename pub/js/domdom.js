@@ -209,11 +209,11 @@ HTMLCollection.prototype.map = function (fun) {
 HTMLCollection.prototype.indexOf = function (obj) {
     return Array.prototype.indexOf.call(this, obj);
 };
-HTMLElement.prototype.addClass = function (class) {
-    return dom.addClass(this, class);
+HTMLElement.prototype.addClass = function (name) {
+    return dom.addClass(this, name);
 };
-HTMLElement.prototype.removeClass = function (class) {
-    return dom.removeClass(this, class);
+HTMLElement.prototype.removeClass = function (name) {
+    return dom.removeClass(this, name);
 };
 
 //
