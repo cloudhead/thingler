@@ -56,12 +56,18 @@ this.post = function (res, id, params, session) {
                 cache[id].push({ rev: rev, changes: changes, ctime: Date.now() });
                 status = 201;
             }
-            res.send(status, {}, {
-                rev: rev,
-                commits: dirty.filter(function (commit) {
-                    return commit.rev > params.rev;
-                })
-            });
+
+            // If it's a goodbye, don't send anything back, just an OK
+            if (params.last) {
+                res.send(status);
+            } else {
+                res.send(status, {}, {
+                    rev: rev,
+                    commits: dirty.filter(function (commit) {
+                        return commit.rev > params.rev;
+                    })
+                });
+            }
         }
     });
 };

@@ -59,14 +59,20 @@ var room = {
 
         footer.style.visibility = 'visible'
 
+        // Before shutdown, do one last sync
+        window.onbeforeunload = function (e) {
+            clock.tick(true);
+        };
+
         //
         // Start the Clock
         //
-        clock.init(function (clock) {
+        clock.init(function (clock, last) {
             var changes = room.changes.commit();
-            xhr.resource(id).post({
+            xhr.resource(id)[last ? 'postSync' : 'post']({
                 rev:     room.rev || 0,
-                changes: changes
+                changes: changes,
+                last:    last
             }, function (err, doc) {
                 if (err) {
                     if (err.status !== 404) { console.log(err) }
@@ -129,10 +135,10 @@ var clock = {
     //
     // Called on every interval tick.
     //
-    tick: function () {
+    tick: function (arg) {
         if (! this.synchronising) {
             this.synchronising = true;
-            this.callback(this);
+            this.callback(this, arg);
         }
     },
 
