@@ -1,6 +1,7 @@
 
 var fs = require('fs');
 var sys = require('sys');
+var http = require('http');
 var Buffer = require('buffer').Buffer;
 
 var journey = require('journey'),
@@ -24,11 +25,13 @@ var env = (process.env['NODE_ENV'] === 'production' ||
 var router = new(journey.Router)(routes.map, { strict: true });
 var file   = new(static.Server)('./pub', { cache: env === 'production' ? 3600 : 0 });
 
-this.server = require('http').createServer(function (request, response) {
-    var body = [];
+this.server = http.createServer(function (request, response) {
+    var body = [], log;
 
     request.addListener('data', function (chunk) { body.push(chunk) });
     request.addListener('end', function () {
+        log = [request.method, request.url, body.join('')];
+
         // If the response hasn't completed within 5 seconds
         // of the request, send a 500 back.
         var timer = setTimeout(function () {
@@ -47,9 +50,7 @@ this.server = require('http').createServer(function (request, response) {
             clearTimeout(timer);
         } else if (request.url === '/') {
             todo.create(function (id) {
-                response.writeHead(303, { 'Location': '/' + id });
-                response.end();
-                clearTimeout(timer);
+                finish(303, { 'Location': '/' + id });
             });
         } else {
             //
@@ -66,15 +67,25 @@ this.server = require('http').createServer(function (request, response) {
                 } else {
                     session.create(request, function (header) {
                         if (header) { result.headers['Set-Cookie'] = header['Set-Cookie'] }
-                        response.writeHead(result.status, result.headers);
-                        response.end(result.body);
-                        clearTimeout(timer);
+                        finish(result.status, result.headers, result.body);
                     });
                 }
             });
         }
+        function finish(status, headers, body) {
+            response.writeHead(status, headers);
+            body ? response.end(body) : response.end();
+            clearTimeout(timer);
+
+            sys.puts([
+                new(Date)().toJSON(),
+                log.join(' '),
+                [status, http.STATUS_CODES[status], body].join(' ')
+            ].join(' -- '));
+        }
     });
 });
+
 
 this.server.listen(options.port);
 
