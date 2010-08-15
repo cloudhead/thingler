@@ -25,14 +25,19 @@ var pilgrim = (function () {
         return {
             path: function (p) { return that.path([path, p].join('/')) },
 
-            get:  function (data, callback) { this.request('get',    data, callback) },
-            put:  function (data, callback) { this.request('put',    data, callback) },
-            post: function (data, callback) { this.request('post',   data, callback) },
-            del:  function (data, callback) { this.request('delete', data, callback) },
-            head: function (data, callback) { this.request('head',   data, callback) },
+            get:  function (data, callback) { this.request(true, 'get',    data, callback) },
+            put:  function (data, callback) { this.request(true, 'put',    data, callback) },
+            post: function (data, callback) { this.request(true, 'post',   data, callback) },
+            del:  function (data, callback) { this.request(true, 'delete', data, callback) },
+            head: function (data, callback) { this.request(true, 'head',   data, callback) },
 
-            request: function (method /* [data], [callback] */) {
-                var query = [], args = Array.prototype.slice.call(arguments, 1)
+            getSync:  function (data, callback) { this.request(false, 'get',    data, callback) },
+            putSync:  function (data, callback) { this.request(false, 'put',    data, callback) },
+            postSync: function (data, callback) { this.request(false, 'post',   data, callback) },
+            delSync:  function (data, callback) { this.request(false, 'delete', data, callback) },
+
+            request: function (async, method /* [data], [callback] */) {
+                var query = [], args = Array.prototype.slice.call(arguments, 2)
                                             .filter(function (a) { return a });
 
                 var callback = args.pop() || function () {},
@@ -49,17 +54,18 @@ var pilgrim = (function () {
                     data = null;
                 }
                 return new(pilgrim.XHR)
-                          (method, path, data, that.headers).send(callback);
+                          (method, path, data, that.headers, async).send(callback);
             }
         };
     };
     //
     // XHR
     //
-    this.XHR = function XHR(method, url, data, headers) {
+    this.XHR = function XHR(method, url, data, headers, async) {
         this.method = method.toLowerCase();
         this.url    = url;
         this.data   = data || {};
+        this.async  = async;
 
         if (window.XMLHttpRequest) {
             this.xhr = new(XMLHttpRequest);
@@ -76,7 +82,7 @@ var pilgrim = (function () {
     this.XHR.prototype.send = function (callback) {
         this.data = JSON.stringify(this.data);
 
-        this.xhr.open(this.method, this.url, true);
+        this.xhr.open(this.method, this.url, this.async);
         this.xhr.onreadystatechange = function () {
             if (this.readyState != 4) { return }
 
