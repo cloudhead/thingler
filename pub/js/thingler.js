@@ -193,7 +193,7 @@ title.addEventListener('blur', function (e) {
     room.changes.push('title', { value: title.value });
 }, false);
 
-xhr.path(id).get(function (err, doc) {
+xhr.resource(id).get(function (err, doc) {
     var password = authenticate.querySelector('input');
     if (err && err.status === 404) {
         go('not-found');
