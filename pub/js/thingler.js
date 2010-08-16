@@ -40,10 +40,8 @@ var room = {
     },
     initialize: function (doc) {
         // Initialize title and revision number
-        title.value = doc.title;
-        room.rev    = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
-
-        document.title = 'Thingler · ' + doc.title;
+        room.rev = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
+        setTitle(doc.title);
 
         if (doc.locked) {
             lock.addClass('locked');
@@ -192,6 +190,7 @@ title.addEventListener('focus', function (e) {
 }, false);
 title.addEventListener('blur', function (e) {
     titleHasFocus = false;
+    setTitle(title.value);
     room.changes.push('title', { value: title.value });
 }, false);
 
@@ -258,7 +257,7 @@ var handlers = {
         dom.flash(item);
     },
     title: function (change) {
-        title.value = change.value;
+        setTitle(change.value);
         dom.flash(title);
     },
     check: function (change) {
@@ -453,6 +452,10 @@ function handleTagFilter(filter) {
             dom.show(child);
         }
     });
+}
+function setTitle(str) {
+    title.value = str;
+    document.title = 'Thingler · ' + str;
 }
 
 //
