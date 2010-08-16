@@ -30,7 +30,12 @@ var room = {
             change.ctime = Date.now();
             change.callback = callback;
             this.data.push(change);
-            clock.tick();
+
+            // If we're inserting, sync the change right away.
+            // Else, let it happen on the next tick.
+            if (type === 'insert') {
+                clock.tick();
+            }
         },
         commit: function () {
             var commit = this.data;
