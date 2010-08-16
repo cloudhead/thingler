@@ -43,6 +43,8 @@ var room = {
         title.value = doc.title;
         room.rev    = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
 
+        document.title = 'Thingler · ' + doc.title;
+
         if (doc.locked) {
             lock.addClass('locked');
             room.locked = true;
