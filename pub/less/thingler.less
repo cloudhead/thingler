@@ -33,39 +33,12 @@
 * { margin: 0; padding: 0 }
 
 body {
-    padding: 60px 30px;
     font-family: 'Arial', sans-serif;
     font-size: 24px;
     width: @page-width;
+    padding: 60px 30px;
     margin: 0 auto;
     background-color: @white;
-}
-a {
-    text-decoration: none;
-    color: @medium-grey;
-}
-#not-found {
-    padding: 60px 0;
-    h1 {
-        text-align: center;
-        font-size: 48px;
-    }
-    p { text-align: center; margin-top: 30px; }
-    a { .link(@dark-grey) }
-}
-#about {
-    margin-top: -30px;
-    font-size: 14px;
-    float: left;
-}
-h1 {
-    color: @black;
-    font-size: 42px;
-}
-
-ul, li {
-    list-style-type: none;
-    padding: 0;
 }
 body > header {
     position: absolute;
@@ -103,37 +76,66 @@ body > footer {
         }
     }
 }
-ul {
-    -webkit-padding-start: 0;
+h1 {
+    color: @black;
+    font-size: 42px;
+}
+
+ul, li {
+    list-style-type: none;
+    padding: 0;
+}
+ul { -webkit-padding-start: 0; }
+a {
+    text-decoration: none;
+    color: @medium-grey;
+}
+#not-found {
+    padding: 60px 0;
+    h1 {
+        text-align: center;
+        font-size: 48px;
+    }
+    p { text-align: center; margin-top: 30px; }
+    a { .link(@dark-grey) }
+}
+#about {
+    font-size: 14px;
+    float: left;
+    display: none;
+    margin-top: 0px;
+    text-align: right;
+    p {
+        font-size: 14px !important;
+        color: @dark-grey;
+        line-height: 22px;
+        a { .link(lighten(@dark-grey, 8%), @light-grey, dashed) }
+    }
 }
 #page {
     width: @page-width;
     @item-height: 48px;
     #title {
-        border: 0;
         font-size: 48px;
         font-weight: bold;
+        font-family: 'Arial', sans-serif;
+        border: 0;
         border: 1px dashed transparent;
         color: @black;
-        font-family: 'Arial', sans-serif;
         &:focus { outline: none; border-color: @light-grey }
         margin-bottom: 15px;
         margin-left: -1px;
         padding: 0.25em 1px;
         width: @page-width - 4px;
         background-color: @white;
-        &:focus {
-            background-color: white;
-        }
+        &:focus { background-color: white; }
     }
     a#show-everything {
         font-size: 14px;
-        margin: 0;
-        padding: 0;
-        float: right;
         text-align: right;
-        margin-top: 15px;
-        margin-right: 95px;
+        float: right;
+        padding: 0;
+        margin: 15px 95px 0 0;
         .link(@medium-grey);
     }
     ul#list.unselectable li {
@@ -151,12 +153,8 @@ ul {
         position: relative;
         //white-space: wrap;
     }
-    label {
-        max-width: 670px;
-    }
-    li.flashing label:after {
-        visibility: hidden;
-    }
+    label                   { max-width: 670px; }
+    li.flashing label:after { visibility: hidden; }
     //label:after {
     //    content: " ";
     //    padding: 1px;
@@ -170,12 +168,12 @@ ul {
     //    background-color: white;
     //    .box-shadow(-15px, 0px, 30px, white);
     //}
-    ul#list { margin: 30px 0; width: @page-width; padding: 0; }
+    #list      { margin: 30px 0; width: @page-width; padding: 0; }
     #list > li {
         overflow: hidden;
         font-size: 22px;
-        width: @page-width - 12px;
         font-family: Georgia, 'Times New Roman', serif;
+        width: @page-width - 12px;
         padding: 0 5px;
         cursor: move;
         border-color: transparent;
@@ -186,38 +184,32 @@ ul {
         background-color: @white;
         a {
             color: @black + #333;
-            &:hover {
-                text-decoration: underline;
-            }
+            &:hover { text-decoration: underline; }
         }
         &:hover {
             background-color: @yellow;
-            .actions {
-                visibility: visible;
-            }
+            .actions { visibility: visible; }
             label:after {
                 background-color: @yellow;
                 .box-shadow(-15px, 0px, 30px, @yellow);
             }
         }
         &.editing {
-            .tags { display: none }
+            .tags                { display: none }
+            .actions             { visibility: visible }
             [data-action="edit"] { color: @light-red }
-            .actions { visibility: visible }
             background-color: white;
             border: 1px dashed @light-grey !important;
             margin-top: -1px;
         }
-        &.editing:last-child {
-            margin-bottom: -1px;
-        }
-        input[type="text"] {
-            margin-left: -1px;
+        &.editing:last-child { margin-bottom: -1px; }
+        input[type="text"]   {
             font-family: Georgia, 'Times New Roman', serif;
+            font-size: 22px;
+            margin-left: -1px;
             border: 0;
             background-color: transparent;
             height: @item-height;
-            font-size: 22px;
             width: 650px;
         }
         input[type="checkbox"] {
@@ -230,9 +222,7 @@ ul {
         }
         @color: desaturate(darken(@dark-yellow, 20%), 35%);
         height: auto;
-        &:hover {
-            .tags li a { color: darken(@color, 5%); background-color: @white }
-        }
+        &:hover .tags li a { color: darken(@color, 5%); background-color: @white }
         .tags {
             @padding-v: 4px;
             float: right;
@@ -246,10 +236,10 @@ ul {
                 margin-left: 5px;
 
                 a {
+                    color: @color;
                     padding: 0;
-                    margin: 0;
-                    line-height: 1em;
                     margin: auto 0;
+                    line-height: 1em;
                     padding: @padding-v 8px;
                     border-width: 1px;
                     border-style: solid;
@@ -257,7 +247,6 @@ ul {
                     border-bottom-color: lighten(@dark-yellow, 5%);
                     background-color: @yellow;
                     display: inline-block;
-                    color: @color;
                     .box-shadow(0, 1px, 2px, #eee);
                     .border-radius(2px);
                     &:hover {
@@ -273,6 +262,9 @@ ul {
             }
             li:first-child { margin-left: 0 }
         }
+        //
+        //   Edit/Remove
+        //
         .actions {
             visibility: hidden;
             float: right;
@@ -288,14 +280,10 @@ ul {
                 text-decoration: none;
                 color: @medium-grey;
                 &:last-child { margin-right: 10px }
-                &:hover {
-                    color: @light-red;
-                }
+                &:hover      { color: @light-red; }
             }
         }
-        &:last-child {
-            border-bottom: 0;
-        }
+        &:last-child { border-bottom: 0; }
     }
     .completed {
         label, label a {
@@ -306,14 +294,11 @@ ul {
 }
 input#new {
     width: @page-width - 18px;
-    &:focus {
-        .box-shadow(0px, 2px, 8px, @light-grey);
-    }
     .box-shadow(0px, 1px, 2px, @light-grey);
+    &:focus { .box-shadow(0px, 2px, 8px, @light-grey); }
 }
-input[type="text"], input[type="password"] {
-    outline: none;
-}
+input[type="text"], input[type="password"] { outline: none; }
+input[type="checkbox"]                     { font-size: 22px; }
 input#new, input[type="password"] {
     font-size: 24px;
     padding: 8px;
@@ -323,25 +308,8 @@ input#new, input[type="password"] {
         background-color: #f0f0f0;
     }
 }
-input[type="checkbox"] {
-    font-size: 22px;
-}
-#about {
-    display: none;
-    margin-top: 0px;
-    text-align: right;
-    p {
-        font-size: 14px !important;
-        color: @dark-grey;
-        line-height: 22px;
-        a { .link(lighten(@dark-grey, 8%), @light-grey, dashed) }
-    }
-}
-
 .dragging {
-    div {
-        cursor: move;
-    }
+    div { cursor: move; }
     position: absolute;
     z-index: 10;
     background-color: hsla(60, 100%, 95%, 0.7) !important;
@@ -351,9 +319,7 @@ input[type="checkbox"] {
     .box-shadow(0px, 2px, 16px, @light-grey);
 }
 .ghost {
-    label {
-        color: @light-grey !important;
-    }
+    label { color: @light-grey !important; }
     .tags {
         color: @light-grey !important;
         li a { background-color: #fefefe !important; border-color: #eee !important }
@@ -363,12 +329,10 @@ input[type="checkbox"] {
     border-top: 1px dashed @light-grey !important;
 }
 
-#password-protect {
-    div.password {
-        .box-shadow(0, 0px, 30px, #ddd);
-        .border-radius(8px);
-        background-color: @white;
-    }
+#password-protect div.password {
+    .box-shadow(0, 0px, 30px, #ddd);
+    .border-radius(8px);
+    background-color: @white;
 }
 div.password {
     @width: 600px;
@@ -438,20 +402,16 @@ div.password {
     &.locked {
         display: block;
         &:hover {
-            .locked-hint { display: inline }
+            .locked-hint   { display: inline }
             .unlocked-hint { display: none }
         }
         span { color: @light-red }
-        div {
-            background: url(/images/lock-24.png) -24px 0 no-repeat;
-        }
+        div  { background: url(/images/lock-24.png) -24px 0 no-repeat; }
     }
     &:hover {
-        .locked-hint { display: none }
+        .locked-hint   { display: none }
         .unlocked-hint { display: inline }
-        div {
-            background: url(/images/lock-24.png) -24px 0 no-repeat;
-        }
+        div { background: url(/images/lock-24.png) -24px 0 no-repeat; }
     }
     span {
         color: @light-red;
