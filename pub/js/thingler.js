@@ -201,14 +201,20 @@ function parseInput(str) {
 //
 // Handle title changes
 //
-title.addEventListener('focus', function (e) {
+title.onfocus = function (e) {
     titleHasFocus = true;
-}, false);
-title.addEventListener('blur', function (e) {
+};
+title.onkeydown = function (e) {
+    if (e.keyCode === 13) {
+        title.blur();
+        return false;
+    }
+};
+title.onblur = function (e) {
     titleHasFocus = false;
     setTitle(title.value);
-    room.changes.push('title', { value: title.value });
-}, false);
+    room.changes.push('title', null, { value: title.value });
+};
 
 xhr.resource(id).get(function (err, doc) {
     var password = authenticate.querySelector('input');
@@ -267,10 +273,11 @@ xhr.resource(id).get(function (err, doc) {
 
 var handlers = {
     insert: function (change) {
-        var item = createItem({ title: change.title, tags: change.tags });
+        var item = createItem(change);
         list.insertBefore(item, list.firstChild);
         dom.sortable(list, handleSort);
         dom.flash(item);
+        return item;
     },
     title: function (change) {
         setTitle(change.value);
