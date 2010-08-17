@@ -187,6 +187,16 @@ input.addEventListener('keydown', function (e) {
     return false;
 }, false);
 
+function parseInput(str) {
+    var value = str.replace(/</g, '&lt;').replace(/>/, '&gt;');
+    var tags = value.match(tagPattern) || [], item;
+
+    value = value.replace(tagPattern, '').trim();
+    tags = tags.map(function (tag) { return tag.slice(1) });
+
+    return { title: value, tags: tags };
+}
+
 //
 // Handle title changes
 //
@@ -264,6 +274,11 @@ var handlers = {
     title: function (change) {
         setTitle(change.value);
         dom.flash(title);
+    },
+    edit: function (change) {
+        var element = find(change.id);
+        refreshItem(element, { title: change.title, tags: change.tags });
+        dom.flash(element);
     },
     check: function (change) {
         var element = find(change.title);
@@ -362,8 +377,8 @@ function createItem(item) {
     var e        = dom.createElement('li'),
         clone    = template.cloneNode(true),
         remove   = clone.querySelector('a[data-action="remove"]'),
-        tagList  = clone.querySelector('ul.tags'),
-        checkbox = clone.querySelector('input');
+        edit     = clone.querySelector('a[data-action="edit"]'),
+        checkbox = clone.querySelector('input[type="checkbox"]');
 
     if (item.completed) {
         checkbox.checked  = true;
@@ -379,21 +394,7 @@ function createItem(item) {
                             item[k].join(' ') : item[k]);
     }
 
-    if (item.tags) {
-        item.tags.forEach(function (tag) {
-            var a  = dom.createElement('a', { href: '#' + tag }, tag),
-                li = dom.createElement('li');
-            li.setAttribute('data-tag', tag);
-            li.appendChild(a);
-            a.onclick = function () {
-                if (window.location.hash.slice(1) === tag) {
-                    window.location.hash = '';
-                    return false;
-                }
-            };
-            tagList.appendChild(li);
-        });
-    }
+    refreshItem(clone, item);
 
     e.appendChild(clone);
 
@@ -401,6 +402,15 @@ function createItem(item) {
     remove.onclick = function () {
         list.removeChild(e);
         room.changes.push('remove', { title: item.title });
+    //
+    // Edit Item
+    //
+    // We return `false` from `onmousedown` to stop
+    // `onblur` from triggering.
+    //
+    edit.onmousedown = function (e) { return false };
+    edit.onclick     = function (e) {
+        handleEdit(clone);
         return false;
     };
 
@@ -418,6 +428,38 @@ function createItem(item) {
     clone.querySelector('label').innerHTML = markup(item.title);
 
     return e;
+}
+
+function refreshItem(element, item) {
+    var tagList = element.querySelector('ul.tags');
+    var label   = element.querySelector('label');
+
+    tagList.innerHTML = '';
+
+    for (var k in item) {
+        element.setAttribute('data-' + k, Array.isArray(item[k]) ?
+                              item[k].join(' ') : item[k]);
+    }
+
+    if (item.tags) {
+        item.tags.forEach(function (tag) {
+            var a  = dom.createElement('a', { href: '#' + tag }, tag),
+                li = dom.createElement('li');
+
+            if (! tagList.querySelector('[data-tag="' + tag + '"]')) {
+                li.setAttribute('data-tag', tag);
+                li.appendChild(a);
+                a.onclick = function () {
+                    if (window.location.hash.slice(1) === tag) {
+                        window.location.hash = '';
+                        return false;
+                    }
+                };
+                tagList.appendChild(li);
+            }
+        });
+    }
+    label.innerHTML = markup(item.title);
 }
 function markup(str) {
     return str.replace(/\*\*((?:\\\*|\*[^*]|[^*])+)\*\*/g, function (_, match) {
@@ -457,6 +499,49 @@ function handleTagFilter(filter) {
             dom.show(child);
         }
     });
+}
+function handleEdit(element) {
+    var label = element.querySelector('label'),
+        tags  = element.getAttribute('data-tags'),
+        id    = element.getAttribute('data-id'),
+        field = element.querySelector('input[type="text"]'),
+        li    = element.parentNode;
+
+    var old = element.getAttribute('data-title');
+
+    field.onblur = function (e) {
+        var item = parseInput(field.value);
+
+        li.removeClass('editing');
+
+        dom.hide(field), dom.show(label);
+
+        // Only push a change if something actually changed.
+        if (item.title !== old || item.tags.join(' ') !== tags) {
+            room.changes.push('edit', id, {
+                title: item.title, tags: item.tags
+            });
+            refreshItem(element, item);
+        }
+    };
+
+    field.onkeydown = function (e) {
+        if (e.keyCode === 13) {
+            field.onblur();
+            return false;
+        }
+    };
+
+    if (li.hasClass('editing')) {
+        field.onblur();
+    } else {
+        li.addClass('editing');
+        field.value = element.getAttribute('data-title') + (
+            tags ? tags.split(' ').map(function (t) { return ' #' + t }).join('') : ''
+        );
+        dom.hide(label), dom.show(field);
+        field.focus();
+    }
 }
 function setTitle(str) {
     title.value = str;

@@ -86,6 +86,13 @@ this.handlers = {
     title: function (doc, change) {
         doc.title = sanitize(change.value);
     },
+    edit: function (doc, change) {
+        var item = find(change.id, doc);
+        if (item) {
+            item.title = change.title;
+            item.tags = change.tags;
+        }
+    },
     sort: function (doc, change) {
         var index = indexOf(change.title, doc), item;
         if (index !== -1) {

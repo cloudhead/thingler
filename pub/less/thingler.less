@@ -174,10 +174,15 @@ ul {
     #list > li {
         overflow: hidden;
         font-size: 22px;
-        width: @page-width - 10px;
+        width: @page-width - 12px;
         font-family: Georgia, 'Times New Roman', serif;
         padding: 0 5px;
         cursor: move;
+        border-color: transparent;
+        border-style: solid;
+        border-width: 0 1px 0px 1px;
+        border-bottom: 1px dotted @light-grey;
+
         background-color: @white;
         a {
             color: @black + #333;
@@ -195,7 +200,27 @@ ul {
                 .box-shadow(-15px, 0px, 30px, @yellow);
             }
         }
-        input {
+        &.editing {
+            .tags { display: none }
+            [data-action="edit"] { color: @light-red }
+            .actions { visibility: visible }
+            background-color: white;
+            border: 1px dashed @light-grey !important;
+            margin-top: -1px;
+        }
+        &.editing:last-child {
+            margin-bottom: -1px;
+        }
+        input[type="text"] {
+            margin-left: -1px;
+            font-family: Georgia, 'Times New Roman', serif;
+            border: 0;
+            background-color: transparent;
+            height: @item-height;
+            font-size: 22px;
+            width: 650px;
+        }
+        input[type="checkbox"] {
             vertical-align: middle;
             height: @item-height;
             line-height: @item-height;
@@ -204,9 +229,7 @@ ul {
             margin-right: 25px;
         }
         @color: desaturate(darken(@dark-yellow, 20%), 35%);
-        //height: @item-height;
         height: auto;
-        border-bottom: 1px dotted @light-grey;
         &:hover {
             .tags li a { color: darken(@color, 5%); background-color: @white }
         }
@@ -238,6 +261,7 @@ ul {
                     .box-shadow(0, 1px, 2px, #eee);
                     .border-radius(2px);
                     &:hover {
+                        text-decoration: none;
                         color: darken(@color, 10%);
                         border-color: darken(@dark-yellow, 8%);
                     }
@@ -256,20 +280,22 @@ ul {
             height: @item-height;
             line-height: @item-height;
             a {
+                padding: 8px;
+                border: 0 !important;
+                &:hover { border: 0 !important }
                 border-bottom: 1px solid #f4f4f4;
                 font-family: Arial, sans-serif;
-                margin-right: 15px;
                 text-decoration: none;
                 color: @medium-grey;
+                &:last-child { margin-right: 10px }
                 &:hover {
                     color: @light-red;
-                    border-bottom: 1px solid hsl(10, 50%, 95%);
                 }
             }
         }
-    }
-    #list > li:last-child {
-        border-bottom: 0;
+        &:last-child {
+            border-bottom: 0;
+        }
     }
     .completed {
         label, label a {
@@ -285,10 +311,12 @@ input#new {
     }
     .box-shadow(0px, 1px, 2px, @light-grey);
 }
+input[type="text"], input[type="password"] {
+    outline: none;
+}
 input#new, input[type="password"] {
     font-size: 24px;
     padding: 8px;
-    outline: none;
     border: 1px solid @light-grey;
     &.disabled {
         color: @medium-grey;
@@ -297,11 +325,6 @@ input#new, input[type="password"] {
 }
 input[type="checkbox"] {
     font-size: 22px;
-}
-a[data-action="remove"] {
-    padding: 8px;
-    border: 0 !important;
-    &:hover { border: 0 !important }
 }
 #about {
     display: none;
@@ -333,7 +356,7 @@ a[data-action="remove"] {
     }
     .tags {
         color: @light-grey !important;
-        li { background-color: #fefefe !important; border-color: #eee !important }
+        li a { background-color: #fefefe !important; border-color: #eee !important }
     }
     margin-top: -1px;
     border-bottom: 1px dashed @light-grey !important;
