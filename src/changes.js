@@ -80,7 +80,11 @@ this.handlers = {
     insert: function (doc, change) {
         if (doc.items.length < 256) {
             if (! Array.isArray(change.tags)) { return }
-            doc.items.unshift({ title: sanitize(change.title), tags: change.tags });
+            doc.items.unshift({
+                id:    change.id,
+                title: sanitize(change.title),
+                tags:  change.tags
+            });
         }
     },
     title: function (doc, change) {
@@ -94,26 +98,26 @@ this.handlers = {
         }
     },
     sort: function (doc, change) {
-        var index = indexOf(change.title, doc), item;
+        var index = indexOf(change.id, doc), item;
         if (index !== -1) {
             item = doc.items.splice(index, 1)[0];
             doc.items.splice(change.to, 0, item);
         }
     },
     check: function (doc, change) {
-        var item = find(change.title, doc);
+        var item = find(change.id, doc);
         if (item) {
             item.completed = Date.now();
         }
     },
     uncheck: function (doc, change) {
-        var item = find(change.title, doc);
+        var item = find(change.id, doc);
         if (item) {
             delete(item.completed);
         }
     },
     remove: function (doc, change) {
-        var index = indexOf(change.title, doc);
+        var index = indexOf(change.id, doc);
         if (index !== -1) {
             doc.items.splice(index, 1);
         }
@@ -143,17 +147,17 @@ function sanitize(str) {
     return str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function find(title, doc) {
+function find(id, doc) {
     for (var i = 0; i < doc.items.length; i++) {
-        if (doc.items[i].title === title) {
+        if (doc.items[i].id === id) {
             return doc.items[i];
         }
     }
     return null;
 }
-function indexOf(title, doc) {
+function indexOf(id, doc) {
     for (var i = 0; i < doc.items.length; i++) {
-        if (doc.items[i].title === title) {
+        if (doc.items[i].id === id) {
             return i;
         }
     }

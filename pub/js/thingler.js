@@ -20,15 +20,19 @@ var authenticate    = document.getElementById('password-authenticate');
 var room = {
     rev: null,
     locked: false,
+    doc: null,
     changes: {
         data:  [],
         rollback: function (changes) {
             this.data = changes.concat(this.data);
         },
-        push: function (type, change, callback) {
-            change.type = type;
-            change.ctime = Date.now();
+        push: function (type, id, change, callback) {
+            change          = change || {};
+            change.type     = type;
+            change.id       = id && parseInt(id);
+            change.ctime    = Date.now() - new(Date)(room.doc.timestamp);
             change.callback = callback;
+
             this.data.push(change);
 
             // If we're inserting, sync the change right away.
@@ -46,6 +50,7 @@ var room = {
     initialize: function (doc) {
         // Initialize title and revision number
         room.rev = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
+        room.doc = doc;
         setTitle(doc.title);
 
         if (doc.locked) {
@@ -173,16 +178,12 @@ var tagPattern = /\B#[a-zA-Z0-9_-]+\b/g;
 //
 input.addEventListener('keydown', function (e) {
     if (e.keyCode === 13 && input.value.length > 0) {
-        var value = input.value.replace(/</g, '&lt;').replace(/>/, '&gt;');
-        var tags = value.match(tagPattern) || [], item;
-
-        value = value.replace(tagPattern, '').trim();
-        tags = tags.map(function (tag) { return tag.slice(1) });
-
-        room.changes.push('insert', { tags: tags, title: value });
+        var item    = parseInput(input.value),
+            element = handlers.insert(item),
+            id      = parseInt(element.firstChild.getAttribute('data-id'));
 
         input.value = '';
-        handlers.insert({ title: value, tags: tags });
+        room.changes.push('insert', id, item);
     }
     return false;
 }, false);
@@ -281,13 +282,13 @@ var handlers = {
         dom.flash(element);
     },
     check: function (change) {
-        var element = find(change.title);
+        var element = find(change.id);
         element.querySelector('[type="checkbox"]').checked = true;
         element.setAttribute('class', 'completed');
         dom.flash(element);
     },
     uncheck: function (change) {
-        var element  = find(change.title),
+        var element  = find(change.id),
             checkbox = element.querySelector('[type="checkbox"]');
 
         checkbox.checked  = false;
@@ -296,11 +297,11 @@ var handlers = {
         dom.flash(element);
     },
     remove: function (change) {
-        var element = find(change.title);
+        var element = find(change.id);
         element && list.removeChild(element.parentNode);
     },
     sort: function (change) {
-        var elem  = find(change.title).parentNode,
+        var elem  = find(change.id).parentNode,
             index = elem.parentNode.children.indexOf(elem),
             ref   = list.children[change.to];
 
@@ -343,7 +344,7 @@ lock.onclick = function () {
     var input = passwordProtect.querySelector('input');
 
     if (room.locked) {
-        room.changes.push('unlock', {});
+        room.changes.push('unlock', null, {});
         handlers.unlock();
     } else {
         input.disabled = false;
@@ -354,7 +355,7 @@ lock.onclick = function () {
             if (e.keyCode === 13 && input.value) {
                 input.disabled = true;
                 input.addClass('disabled');
-                room.changes.push('lock', { password: input.value }, function () {
+                room.changes.push('lock', null, { password: input.value }, function () {
                     dom.hide(passwordProtect);
                 });
                 handlers.lock();
@@ -368,8 +369,8 @@ lock.onclick = function () {
 //
 // Find an item by `title`
 //
-function find(title) {
-    return list.querySelector('[data-title="' + title + '"]');
+function find(id) {
+    return list.querySelector('[data-id="' + id + '"]');
 }
 
 function createItem(item) {
@@ -389,9 +390,8 @@ function createItem(item) {
     clone.id = '';
     clone.setAttribute('style', '');
 
-    for (var k in item) {
-        clone.setAttribute('data-' + k, Array.isArray(item[k]) ?
-                            item[k].join(' ') : item[k]);
+    if (! item.id) {
+        item.id = Date.now() - new(Date)(room.doc.timestamp);
     }
 
     refreshItem(clone, item);
@@ -401,7 +401,10 @@ function createItem(item) {
     // Remove Item
     remove.onclick = function () {
         list.removeChild(e);
-        room.changes.push('remove', { title: item.title });
+        room.changes.push('remove', item.id);
+        return false;
+    };
+
     //
     // Edit Item
     //
@@ -417,15 +420,13 @@ function createItem(item) {
     // Check Item
     checkbox.addEventListener('click', function () {
         if (this.checked) {
-            room.changes.push('check', { title: item.title });
+            room.changes.push('check', item.id);
             clone.setAttribute('class', 'completed');
         } else {
-            room.changes.push('uncheck', { title: item.title });
+            room.changes.push('uncheck', item.id);
             clone.setAttribute('class', '');
         }
     }, false);
-
-    clone.querySelector('label').innerHTML = markup(item.title);
 
     return e;
 }
@@ -473,8 +474,8 @@ function markup(str) {
     }).replace(/(http:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 }
 
-function handleSort(title, to) {
-    return room.changes.push('sort', { title: title, to: to });
+function handleSort(id, to) {
+    return room.changes.push('sort', id, { to: to });
 }
 function handleTagFilter(filter) {
     var child, tag, tags;

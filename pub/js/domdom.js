@@ -29,7 +29,7 @@ document.onmouseup = function () {
         dom.dragging.target.removeClass('ghost');
         dom.sorting.element.removeClass('unselectable');
 
-        dom.sorting.callback(dom.dragging.element.firstChild.getAttribute('data-title'), dom.dragging.index);
+        dom.sorting.callback(dom.dragging.element.firstChild.getAttribute('data-id'), dom.dragging.index);
 
         dom.dragging.element = null;
         dom.dragging.offset  = null;
