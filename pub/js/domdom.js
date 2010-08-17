@@ -124,6 +124,9 @@ dom.addClass = function (e, name) {
         e.setAttribute('class', classes.concat(name).join(' ').trim());
     }
 };
+dom.hasClass = function (e, name) {
+    return new(RegExp)('\\b' + name + '\\b').test(e.className);
+};
 dom.getPosition = function (e) {
     var left = 0;
     var top  = 0;
@@ -214,6 +217,9 @@ HTMLElement.prototype.addClass = function (name) {
 };
 HTMLElement.prototype.removeClass = function (name) {
     return dom.removeClass(this, name);
+};
+HTMLElement.prototype.hasClass = function (name) {
+    return dom.hasClass(this, name);
 };
 
 //
