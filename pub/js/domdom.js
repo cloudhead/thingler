@@ -221,6 +221,17 @@ HTMLElement.prototype.removeClass = function (name) {
 HTMLElement.prototype.hasClass = function (name) {
     return dom.hasClass(this, name);
 };
+HTMLElement.prototype.insertAfter = function (element, ref) {
+    this.insertBefore(element, ref.nextElementSibling);
+};
+HTMLElement.prototype.isDescendantOf = function (element) {
+    var source = this;
+    while (source !== document.body) {
+        if (source === element) { return true }
+        else                    { source = source.parentNode }
+    }
+    return false;
+};
 
 //
 // Object & Array ECMA 5 methods
