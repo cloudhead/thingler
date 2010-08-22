@@ -145,12 +145,6 @@ dom.getPosition = function (e) {
     var left = 0;
     var top  = 0;
 
-    var cached = null;
-
-    if (cached = dom.sorting.positions[list.children.indexOf(e)]) {
-        return cached;
-    }
-
     while (e.offsetParent) {
         left += e.offsetLeft;
         top  += e.offsetTop;
