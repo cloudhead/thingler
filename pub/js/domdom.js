@@ -98,6 +98,8 @@ dom.draggable = function (elem) {
             } 
         } else { return true }
 
+        if (this.hasClass('editing')) { return true }
+
         var pos   = dom.getPosition(this);
         var clone = this.cloneNode(true);
 
