@@ -173,29 +173,25 @@ var clock = {
 var titleHasFocus = false;
 var tagPattern = /\B#[a-zA-Z0-9_-]+\b/g;
 
-//
-// New Item
-//
-input.addEventListener('keydown', function (e) {
-    if (e.keyCode === 13 && input.value.length > 0) {
-        var item    = parseInput(input.value),
-            element = handlers.insert(item),
-            id      = parseInt(element.firstChild.getAttribute('data-id'));
+dom.tokenizing(input, input.parentNode, tagPattern).on('new', function (e) {
+    var tokens  = this.parentNode.querySelector('.tokens'),
+        title   = parseTitle(this.value),
+        item    = { title: title, tags: e.tokens.concat(hash.length > 1 ? [hash] : []) },
+        element = handlers.insert(item),
+        id      = parseInt(element.firstChild.getAttribute('data-id'));
 
-        input.value = '';
-        room.changes.push('insert', id, item);
-    }
-    return false;
+    tokens.innerHTML = '';
+    this.value       = '';
+    this.focus();
+
+    room.changes.push('insert', id, item);
 }, false);
 
-function parseInput(str) {
-    var value = str.replace(/</g, '&lt;').replace(/>/, '&gt;');
-    var tags = value.match(tagPattern) || [], item;
+input.parentNode.on('focus', function () { this.addClass('focused') })
+                .on('blur',  function () { this.removeClass('focused') });
 
-    value = value.replace(tagPattern, '').trim();
-    tags = tags.map(function (tag) { return tag.slice(1) });
-
-    return { title: value, tags: tags };
+function parseTitle(str) {
+    return str.replace(/</g, '&lt;').replace(/>/, '&gt;').trim();
 }
 
 //
@@ -386,7 +382,8 @@ function createItem(item) {
         clone    = template.cloneNode(true),
         remove   = clone.querySelector('a[data-action="remove"]'),
         edit     = clone.querySelector('a[data-action="edit"]'),
-        checkbox = clone.querySelector('input[type="checkbox"]');
+        checkbox = clone.querySelector('input[type="checkbox"]'),
+        input    = clone.querySelector('input[type=text]');
 
     if (item.completed) {
         checkbox.checked  = true;
@@ -423,6 +420,11 @@ function createItem(item) {
         handleEdit(clone);
         return false;
     };
+
+    dom.tokenizing(input, e, tagPattern);
+
+    input.addEventListener('new',     handleEditSave, false);
+    input.addEventListener('blurall', handleEditSave, false);
 
     // Check Item
     checkbox.addEventListener('click', function () {
@@ -509,53 +511,62 @@ function handleTagFilter(filter) {
     });
 }
 function handleEdit(element) {
-    var label = element.querySelector('label'),
-        tags  = element.getAttribute('data-tags'),
-        id    = element.getAttribute('data-id'),
-        field = element.querySelector('input[type="text"]'),
-        li    = element.parentNode;
+    var label  = element.querySelector('label'),
+        tags   = element.getAttribute('data-tags'),
+        field  = element.querySelector('input[type="text"]'),
+        li     = element.parentNode,
+        tokens = element.querySelector('.tokens');
 
-    var old = element.getAttribute('data-title');
-
-    field.onblur = function (e) {
-        var item = parseInput(field.value);
-
-        li.removeClass('editing');
-
-        dom.hide(field), dom.show(label);
-
-        // Only push a change if something actually changed.
-        if (item.title !== old || item.tags.join(' ') !== tags) {
-            room.changes.push('edit', id, {
-                title: item.title, tags: item.tags
-            });
-            refreshItem(element, item);
-        }
-    };
-
-    field.onkeydown = function (e) {
-        if (e.keyCode === 13) {
-            field.onblur();
-            return false;
-        }
-    };
+    li.style.cursor = 'text';
 
     if (li.hasClass('editing')) {
-        field.onblur();
+        handleEditSave.call(field, { tokens: dom.tokenizing.parseTokens(tokens) });
     } else {
         li.addClass('editing');
-        field.value = element.getAttribute('data-title') + (
-            tags ? tags.split(' ').map(function (t) { return ' #' + t }).join('') : ''
-        );
-        dom.hide(label), dom.show(field);
-        field.focus();
+        dom.show(tokens), dom.hide(label), dom.show(field);
+        if (tags) {
+            dom.tokenizing.createTokens.call(field.tokenizer, tags.split(' '));
+            tokens.lastChild.lastChild.focus();
+        } else {
+            field.focus();
+        }
+        field.value = element.getAttribute('data-title');
+        field.autosize();
     }
 }
+function handleEditSave(e) {
+    if (! this.parentNode.parentNode.hasClass('editing')) { return }
+
+    var div    = this.parentNode,
+        tokens = div.querySelector('.tokens'),
+        tags   = div.getAttribute('data-tags'),
+        id     = div.getAttribute('data-id'),
+        label  = div.querySelector('label');
+
+    var item = {
+        title: parseTitle(this.value),
+        tags: e.tokens
+    };
+
+    div.parentNode.style.cursor = '';
+
+    var old = div.getAttribute('data-title');
+
+    div.parentNode.removeClass('editing');
+    dom.hide(this), dom.show(label);
+
+    // Only push a change if something actually changed.
+    if (item.title !== old || item.tags.join(' ') !== tags) {
+        room.changes.push('edit', id, item);
+        refreshItem(div, item);
+    }
+    dom.hide(tokens);
+};
+
 function setTitle(str) {
     title.value = str;
     document.title = 'Thingler · ' + str;
 }
-
 //
 // Check the hashtag every 10ms, for changes
 //
