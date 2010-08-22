@@ -1,15 +1,23 @@
-@yellow: hsl(60, 85%, 97%);
-@red: hsl(10, 50%, 60%);
-@light-red: #ee8167;
+//
+// thingler.less
+//
+@yellow:      hsl(60, 85%, 97%);
 @dark-yellow: hsl(hue(@yellow), 55%, 92%);
-@black: hsl(215, 20%, 30%);
-@dark-blue: hsl(225, 50%, 40%);
-@light-grey: #ddd;
-@medium-grey: #ccc;
-@dark-grey: #aaa;
-@white: #fafafa;
-@page-width: 800px;
+@red:         hsl(10, 50%, 60%);
+@light-red:   #ee8167;
+@black:       hsl(215, 20%, 30%);
+@dark-blue:   hsl(225, 50%, 40%);
 
+@white:       #fafafa;
+@light-grey:  #ddd;
+@medium-grey: #ccc;
+@dark-grey:   #aaa;
+
+@page-width:  800px;
+
+//
+// Mixins
+//
 .box-shadow(@x, @y, @blur, @color) {
     -webkit-box-shadow: @x @y @blur @color;
     -moz-box-shadow: @x @y @blur @color;
@@ -20,6 +28,14 @@
     -moz-border-radius: @r;
     border-radius: @r;
 }
+.border-radius-bottom(@r) {
+    -webkit-border-bottom-left-radius: @r;
+    -moz-border-bottom-left-radius: @r;
+    border-bottom-left-radius: @r;
+    -webkit-border-bottom-right-radius: @r;
+    -moz-border-bottom-right-radius: @r;
+    border-bottom-right-radius: @r;
+}
 .link (@color: inherit, @border-color: #eee, @border-style: solid) {
     border-bottom: 1px @border-style @border-color;
     font-family: Arial, sans-serif;
@@ -29,7 +45,29 @@
         border-bottom: 1px solid hsl(10, 50%, 95%);
     }
 }
+.tokenize (@color, @padding-v, @padding-h: 8px) {
+    color: @color;
+    padding: 0;
+    margin: auto 0;
+    line-height: 1em;
+    padding: @padding-v @padding-h;
+    border-width: 1px;
+    border-style: solid;
+    border-color: darken(@dark-yellow, 2%);
+    background-color: @yellow;
+    display: inline-block;
+    .box-shadow(0, 1px, 2px, #eee);
+    .border-radius(2px);
+    &:hover {
+        text-decoration: none;
+        color: darken(@color, 10%);
+        border-color: darken(@dark-yellow, 8%);
+    }
+}
 
+//
+// General
+//
 * { margin: 0; padding: 0 }
 
 body {
@@ -76,42 +114,17 @@ body > footer {
         }
     }
 }
-h1 {
-    color: @black;
-    font-size: 42px;
-}
 
-ul, li {
-    list-style-type: none;
-    padding: 0;
-}
-ul { -webkit-padding-start: 0; }
-a {
-    text-decoration: none;
-    color: @medium-grey;
-}
-#not-found {
-    padding: 60px 0;
-    h1 {
-        text-align: center;
-        font-size: 48px;
-    }
-    p { text-align: center; margin-top: 30px; }
-    a { .link(@dark-grey) }
-}
-#about {
-    font-size: 14px;
-    float: left;
-    display: none;
-    margin-top: 0px;
-    text-align: right;
-    p {
-        font-size: 14px !important;
-        color: @dark-grey;
-        line-height: 22px;
-        a { .link(lighten(@dark-grey, 8%), @light-grey, dashed) }
-    }
-}
+h1     { color: @black; font-size: 42px; }
+ul, li { list-style-type: none; padding: 0; }
+ul     { -webkit-padding-start: 0; }
+a      { text-decoration: none; color: @medium-grey; }
+input[type="text"], input[type="password"] { outline: none; }
+input[type="checkbox"]                     { font-size: 22px; }
+
+//
+// Todo List
+//
 #page {
     width: @page-width;
     @item-height: 48px;
@@ -129,14 +142,6 @@ a {
         width: @page-width - 4px;
         background-color: @white;
         &:focus { background-color: white; }
-    }
-    a#show-everything {
-        font-size: 14px;
-        text-align: right;
-        float: right;
-        padding: 0;
-        margin: 15px 95px 0 0;
-        .link(@medium-grey);
     }
     ul#list.unselectable li {
         cursor: default;
@@ -180,7 +185,6 @@ a {
         border-style: solid;
         border-width: 0 1px 0px 1px;
         border-bottom: 1px dotted @light-grey;
-
         background-color: @white;
         a {
             color: @black + #333;
@@ -222,38 +226,26 @@ a {
         }
         @color: desaturate(darken(@dark-yellow, 20%), 35%);
         height: auto;
-        &:hover .tags li a { color: darken(@color, 5%); background-color: @white }
+        &:hover .tags li a {
+            color: darken(@color, 5%);
+            background-color: @white;
+        }
+        &.editing .token {
+            color: darken(@color, 15%) !important;
+        }
         .tags {
             @padding-v: 4px;
             float: right;
             display: inline;
             line-height: @item-height;
             height: @item-height;
-            font-size: 16px;
             margin: 0 15px;
             li {
                 display: inline-block;
                 margin-left: 5px;
 
                 a {
-                    color: @color;
-                    padding: 0;
-                    margin: auto 0;
-                    line-height: 1em;
-                    padding: @padding-v 8px;
-                    border-width: 1px;
-                    border-style: solid;
-                    border-color: @dark-yellow;
-                    border-bottom-color: lighten(@dark-yellow, 5%);
-                    background-color: @yellow;
-                    display: inline-block;
-                    .box-shadow(0, 1px, 2px, #eee);
-                    .border-radius(2px);
-                    &:hover {
-                        text-decoration: none;
-                        color: darken(@color, 10%);
-                        border-color: darken(@dark-yellow, 8%);
-                    }
+                    .tokenize(@color, @padding-v);
                 }
                 &.active a {
                     border-color: darken(@dark-yellow, 8%);
@@ -290,16 +282,21 @@ a {
             color: #ccc !important;
             text-decoration: line-through;
         }
+        .tags li a {
+            color: #ccc !important;
+            background-color: #fafafa !important;
+            border-color: #eee !important;
+            &:hover {
+                color: #bbb !important;
+            }
+        }
     }
 }
-input#new {
-    width: @page-width - 18px;
-    .box-shadow(0px, 1px, 2px, @light-grey);
-    &:focus { .box-shadow(0px, 2px, 8px, @light-grey); }
-}
-input[type="text"], input[type="password"] { outline: none; }
-input[type="checkbox"]                     { font-size: 22px; }
-input#new, input[type="password"] {
+
+//
+// Input
+//
+input#new, input[type="password"], input.token-input {
     font-size: 24px;
     padding: 8px;
     border: 1px solid @light-grey;
@@ -308,6 +305,78 @@ input#new, input[type="password"] {
         background-color: #f0f0f0;
     }
 }
+input#new, span.string-input, input.token {
+    font-family: 'Lucida Grande', Arial, sans-serif;
+}
+ul.tokens               { margin: 0 }
+ul.tokens, ul.tokens li { display: inline-block; margin: 0; }
+
+span.string-input {
+    font-size: 24px;
+    margin-left: 1px;
+}
+ul.tokens li:last-child .token-input {
+    padding: 0 5px !important;
+}
+input.token-input {
+    margin: 0;
+    padding: 0 3px 0 1px;
+    display: inline-block;
+    outline: none;
+    border: 0;
+    &.empty {
+        margin: 0;
+        width: 5px;
+    }
+}
+
+#list {
+    .token {
+        @color: desaturate(darken(@dark-yellow, 20%), 35%);
+        .tokenize(@color, 2px, 1px);
+        padding-right: 4px;
+        margin-left: -2px;
+        outline: none;
+        font-size: inherit;
+        font-family: inherit;
+    }
+    .token-input {
+        padding: 0 3px 0 1px;
+        margin: 0;
+        font-family: inherit;
+        font-size: inherit;
+    }
+}
+#new-wrapper {
+    font-size: 24px;
+    padding: 8px;
+    cursor: text;
+    width: @page-width - 18px;
+    .box-shadow(0px, 1px, 2px, @light-grey);
+    &.focused { .box-shadow(0px, 2px, 8px, @light-grey); }
+    border: 1px solid @light-grey;
+    background-color: white;
+    input#new {
+        width: @page-width - 18px - 16px;
+        padding: 0;
+        border: 0 !important;
+        display: inline-block;
+        margin: 0;
+    }
+    .token {
+        @color: desaturate(darken(@dark-yellow, 20%), 35%);
+        .tokenize(@color, 2px, 1px);
+        padding-right: 4px;
+        margin: -6px 0;
+        margin-left: -2px; // To compensate for the padding-left
+        outline: none;
+        font-size: 24px;
+    }
+}
+
+//
+// Drag & Drop
+//
 .dragging {
     div { cursor: move; }
     position: absolute;
@@ -329,22 +398,28 @@ input#new, input[type="password"] {
     border-top: 1px dashed @light-grey !important;
 }
 
+
+//
+// Room Locking
+//
 #password-protect div.password {
-    .box-shadow(0, 0px, 30px, #ddd);
     .border-radius(8px);
-    background-color: @white;
+    background-color: transparent;
+    input {
+        .box-shadow(0, 3px, 30px, #ddd);
+    }
 }
 div.password {
     @width: 600px;
-    @height: 300px;
+    @height: 116px;
     position: absolute;
-    top: 50%;
+    height: @height;
+    top: 40%;
     left: 50%;
     width: @width;
     margin-left: ((@width + 120px) / 2) * -1;
     margin-top: ((@height + 120px) / 2) * -1;
     padding: 60px;
-    //background-color: white;
 
     label {
         font-weight: bold;
@@ -360,34 +435,20 @@ div.password {
     input.error {
         border-color: hsl(10, 60%, 60%);
     }
+    label {
+    }
     .close {
-        color: #ddd;
-        text-align: center;
-        display: block;
-        width: 32px;
-        height: 32px;
+        color: #ccc;
+        float: right;
+        margin-top: 30px;
+        margin-right: 16px;
         font-size: 18px;
-        position: absolute;
-        top: 15px;
-        left: 10px;
+        text-shadow: 0px 0px 10px white;
+        border-bottom: 1px solid #eee;
         &:hover {
             color: @light-red;
         }
     }
-}
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10;
-}
-#password-authenticate.overlay {
-    background-color: @white;
-}
-#password-protect.overlay {
-    background-color: rgba(255, 255, 255, 0.8);
 }
 #lock {
     text-align: right;
@@ -420,3 +481,52 @@ div.password {
         vertical-align: 1px;
     }
 }
+
+//
+// Overlays
+//
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+#password-authenticate.overlay {
+    background-color: @white;
+}
+#password-protect.overlay {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+//
+// 404
+//
+#not-found {
+    padding: 60px 0;
+    h1 {
+        text-align: center;
+        font-size: 48px;
+    }
+    p { text-align: center; margin-top: 30px; }
+    a { .link(@dark-grey) }
+}
+
+//
+// About
+//
+#about {
+    font-size: 14px;
+    float: left;
+    display: none;
+    margin-top: 0px;
+    text-align: right;
+    p {
+        font-size: 14px !important;
+        color: @dark-grey;
+        line-height: 22px;
+        a { .link(lighten(@dark-grey, 8%), @light-grey, dashed) }
+    }
+}
+
