@@ -262,6 +262,16 @@ dom.autosizing = function (input) {
 //
 // DOM Prototype Extensions
 //
+Node.prototype.emit = function (type, data) {
+    var event = document.createEvent('Events');
+    event.initEvent(type, true, true);
+    for (var k in data) { event[k] = data[k] }
+    return this.dispatchEvent(event);
+};
+Node.prototype.on = function (event, listener, c) {
+    this.addEventListener(event, listener, c || false);
+    return this;
+};
 NodeList.prototype.forEach = function (fun) {
     return Array.prototype.forEach.call(this, fun);
 };
@@ -294,11 +304,18 @@ HTMLElement.prototype.insertAfter = function (element, ref) {
 };
 HTMLElement.prototype.isDescendantOf = function (element) {
     var source = this;
-    while (source !== document.body) {
+    while (source !== document) {
         if (source === element) { return true }
         else                    { source = source.parentNode }
     }
     return false;
+};
+HTMLElement.prototype.getComputedStyle = function (pseudo) {
+    return window.getComputedStyle(this, pseudo);
+};
+HTMLElement.prototype.setCursor = function (x) {
+    this.setSelectionRange(x, x);
+    return this;
 };
 
 //
