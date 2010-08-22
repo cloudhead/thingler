@@ -64,7 +64,7 @@ var room = {
             list.appendChild(createItem(item));
         });
 
-        handleTagFilter(hash.slice(1));
+        handleTagFilter(hash);
         dom.sortable(list, handleSort);
 
         footer.style.visibility = 'visible'
@@ -451,14 +451,14 @@ function refreshItem(element, item) {
 
     if (item.tags) {
         item.tags.forEach(function (tag) {
-            var a  = dom.createElement('a', { href: '#' + tag }, tag),
+            var a  = dom.createElement('a', { href: tag }, tag),
                 li = dom.createElement('li');
 
             if (! tagList.querySelector('[data-tag="' + tag + '"]')) {
                 li.setAttribute('data-tag', tag);
                 li.appendChild(a);
                 a.onclick = function () {
-                    if (window.location.hash.slice(1) === tag) {
+                    if (window.location.hash === tag) {
                         window.location.hash = '';
                         return false;
                     }
@@ -493,7 +493,7 @@ function handleTagFilter(filter) {
 
     list.children.forEach(function (child) {
         if (filter) {
-            tag = child.querySelector('[data-tag=' + filter + ']');
+            tag = child.querySelector('[data-tag="' + filter + '"]');
             tags = child.firstChild.getAttribute('data-tags');
 
             if (tags && (tags.split(' ').indexOf(filter) !== -1)) {
@@ -562,7 +562,7 @@ function setTitle(str) {
 setInterval(function () {
     if (window.location.hash !== hash) {
         hash = window.location.hash;
-        handleTagFilter(hash.slice(1));
+        handleTagFilter(hash);
     }
 }, 10);
 
