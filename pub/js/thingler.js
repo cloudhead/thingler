@@ -37,7 +37,7 @@ var room = {
 
             // If we're inserting, sync the change right away.
             // Else, let it happen on the next tick.
-            if (type === 'insert') {
+            if (type === 'insert' || type === 'lock') {
                 clock.tick();
             }
         },
