@@ -123,8 +123,10 @@ this.handlers = {
         }
     },
     lock: function (doc, change, session) {
-        session.authenticated.push(doc._id);
-        doc.password = md5.digest(change.password);
+        if (session) {
+            session.authenticated.push(doc._id);
+            doc.password = md5.digest(change.password);
+        }
     },
     unlock: function (doc, change, session) {
         doc.password = null;
