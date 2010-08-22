@@ -1,4 +1,4 @@
 {
-  "files": ["pilgrim.js", "domdom.js", "thingler.js"],
+  "files": ["pilgrim.js", "domdom.js", "domdom-tokenizing.js", "thingler.js"],
   "minify": false
 }
