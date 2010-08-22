@@ -13,6 +13,18 @@ dom.sorting = {
     positions: []
 };
 
+var KEY = {
+    BACKSPACE: 8,
+    TAB:       9,
+    RETURN:   13,
+    ESC:      27,
+    SPACE:    32,
+    LEFT:     37,
+    UP:       38,
+    RIGHT:    39,
+    DOWN:     40,
+};
+
 dom.sortable = function (list, callback) {
     dom.sorting.element = list;
     dom.sorting.callback = callback;
@@ -189,6 +201,62 @@ dom.show = function (e) {
 };
 dom.hide = function (e) {
     return e.style.display = 'none';
+};
+
+dom.contentWidth = function (element, str) {
+    var span = dom.createElement('span'), width, parent, style;
+
+    var css = function (property) {
+        return window.getComputedStyle(element, null).getPropertyValue(property);
+    };
+
+    span.style.fontFamily    = css('font-family');
+    span.style.fontSize      = css('font-size');
+    span.style.letterSpacing = css('letter-spacing');
+    span.style.wordSpacing   = css('word-spacing');
+    span.style.padding       = css('padding');
+    span.style.margin        = css('margin');
+    span.style.height        = 'auto';
+    span.style.width         = 'auto';
+    span.style.visibility    = 'hidden';
+    span.style.position      = 'absolute';
+    span.style.top           = '-1000px';
+
+    span.innerHTML = (str || element.value).replace(/ /g, '&nbsp;')
+                                           .replace(/</g, '&lt;')
+                                           .replace(/>/g, '&gt;');
+    document.body.appendChild(span);
+    width = span.offsetWidth;
+    document.body.removeChild(span);
+
+    return Math.max(width + 1, 2);
+};
+dom.autosizing = function (input) {
+    if (input.AUTOSIZING) { return input }
+
+    var resize = function (element, str) {
+        return element.style.width = dom.contentWidth(element, str) + 'px';
+    };
+    input.addEventListener('keypress', function (e) {
+        if (e.charCode) { // Make sure it's a printable character. (Firefox)
+            resize(this, this.value + String.fromCharCode(e.charCode));
+        }
+    }, false);
+    input.addEventListener('keydown', function (e) {
+        var position = e.target.selectionStart, string = this.value.split('');
+        if (e.keyCode === KEY.BACKSPACE && position > 0) {
+            string.splice(position - 1, 1);
+            resize(this, string.join(''));
+        }
+    }, false);
+    input.autosize = function (str) {
+        return resize(this, str || this.value);
+    };
+    resize(input, input.value);
+
+    input.AUTOSIZING = true;
+
+    return input;
 };
 
 //

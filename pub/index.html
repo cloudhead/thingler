@@ -18,7 +18,10 @@
 
     <div id="page" style="display:none">
       <input id="title" type="text" />
-      <input id="new" type="text" maxlength="256" name="" value="" />
+      <div id="new-wrapper">
+        <input id="new" type="text" maxlength="256" name="" value="" />
+        <ul class="tokens"></ul>
+      </div>
       <ul id="list"></ul>
     </div>
 
@@ -67,6 +70,7 @@
         <input type="checkbox" name="" value="" />
         <input type="text" name="" value="" style="display:none" />
         <label></label>
+        <ul class="tokens"></ul>
         <div class="actions">
           <a href="#" data-action="edit">&#x270E;</a>
           <a href="#" data-action="remove">&#x2717;</a>
