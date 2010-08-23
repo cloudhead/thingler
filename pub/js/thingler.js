@@ -395,7 +395,6 @@ function createItem(item) {
     clone.setAttribute('style', '');
 
     if (! ('id' in item)) {
-        console.log("no id");
         item.id = Date.now() - new(Date)(room.doc.timestamp);
     }
 
