@@ -46,7 +46,6 @@ var pilgrim = (function () {
                 path = (that.host + '/' + path).replace('//', '/');
 
                 if (method === 'get' && data) {
-                    console.log(data)
                     for (var k in data) {
                         query.push(k + '=' + encodeURIComponent(data[k]));
                     }
