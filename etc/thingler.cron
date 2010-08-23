@@ -9,4 +9,4 @@
 00 7 * * * cp /var/lib/couchdb/thingler.couch /usr/local/var/couchdb/thingler-backup.daily.`date +%a`.couch
 
 # Compact database every day at 6AM
-00 6 * * * curl -H "Content-Type: application/json" -X POST http://0.0.0.0:5984/thingler/_compact
+00 */3 * * * curl -H "Content-Type: application/json" -X POST http://0.0.0.0:5984/thingler/_compact
