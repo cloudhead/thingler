@@ -433,6 +433,7 @@ function createItem(item) {
             clone.setAttribute('class', 'completed');
         } else {
             room.changes.push('uncheck', item.id);
+            clone.removeAttribute('data-completed');
             clone.setAttribute('class', '');
         }
     }, false);
@@ -515,13 +516,18 @@ function handleEdit(element) {
         tags   = element.getAttribute('data-tags'),
         field  = element.querySelector('input[type="text"]'),
         li     = element.parentNode,
+        check  = element.querySelector('input[type="checkbox"]'),
         tokens = element.querySelector('.tokens');
 
     li.style.cursor = 'text';
 
     if (li.hasClass('editing')) {
+        if (element.getAttribute('data-completed')) {
+            check.disabled = true;
+        }
         handleEditSave.call(field, { tokens: dom.tokenizing.parseTokens(tokens) });
     } else {
+        check.disabled = false;
         li.addClass('editing');
         dom.show(tokens), dom.hide(label), dom.show(field);
         if (tags) {
