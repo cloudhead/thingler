@@ -522,9 +522,6 @@ function handleEdit(element) {
     li.style.cursor = 'text';
 
     if (li.hasClass('editing')) {
-        if (element.getAttribute('data-completed')) {
-            check.disabled = true;
-        }
         handleEditSave.call(field, { tokens: dom.tokenizing.parseTokens(tokens) });
     } else {
         check.disabled = false;
@@ -547,6 +544,7 @@ function handleEditSave(e) {
         tokens = div.querySelector('.tokens'),
         tags   = div.getAttribute('data-tags'),
         id     = div.getAttribute('data-id'),
+        check  = div.querySelector('input[type="checkbox"]'),
         label  = div.querySelector('label');
 
     var item = {
@@ -557,6 +555,8 @@ function handleEditSave(e) {
     div.parentNode.style.cursor = '';
 
     var old = div.getAttribute('data-title');
+
+    div.getAttribute('data-completed') && (check.disabled = true);
 
     div.parentNode.removeClass('editing');
     dom.hide(this), dom.show(label);
