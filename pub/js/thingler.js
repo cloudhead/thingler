@@ -191,7 +191,7 @@ input.parentNode.on('focus', function () { this.addClass('focused') })
                 .on('blur',  function () { this.removeClass('focused') });
 
 function parseTitle(str) {
-    return str.replace(/</g, '&lt;').replace(/>/, '&gt;').trim();
+    return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/, '&amp;').trim();
 }
 
 //

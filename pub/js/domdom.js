@@ -155,7 +155,7 @@ dom.getPosition = function (e) {
     top  += e.offsetTop;
 
     return { x: left, y: top };
-}
+};
 
 dom.createElement = function (name, attrs, html) {
     var e = document.createElement(name);
@@ -219,6 +219,7 @@ dom.contentWidth = function (element, str) {
     span.style.top           = '-1000px';
 
     span.innerHTML = (str || element.value).replace(/ /g, '&nbsp;')
+                                           .replace(/&/g, '&amp;')
                                            .replace(/</g, '&lt;')
                                            .replace(/>/g, '&gt;');
     document.body.appendChild(span);
