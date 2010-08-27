@@ -218,10 +218,10 @@ dom.contentWidth = function (element, str) {
     span.style.position      = 'absolute';
     span.style.top           = '-1000px';
 
-    span.innerHTML = (str || element.value).replace(/ /g, '&nbsp;')
-                                           .replace(/&/g, '&amp;')
+    span.innerHTML = (str || element.value).replace(/&/g, '&amp;')
                                            .replace(/</g, '&lt;')
-                                           .replace(/>/g, '&gt;');
+                                           .replace(/>/g, '&gt;')
+                                           .replace(/ /g, '&nbsp;');
     document.body.appendChild(span);
     width = span.offsetWidth;
     document.body.removeChild(span);
