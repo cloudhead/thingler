@@ -1,11 +1,18 @@
 var fs = require('fs');
 
-this.cacheManifest = function(env, callback, network, fallback) {
+this.cacheManifest = function(env, callback, cache, network, fallback) {
   var config = {
     cache: [],
-    network: ['/'],
+    network: [],
     fallback: []
   };
+
+  //augment cache array
+  if (cache && cache.length > 0) {
+    for (var i = 0; i < cache.length; i++) {
+      config.cache.push(cache[i]);
+    }
+  }
 
   //augment network array ('/' is already present)
   if (network && network.length > 0) {
@@ -31,9 +38,9 @@ this.cacheManifest = function(env, callback, network, fallback) {
     }
 
     if (regenerate) {
-      config.cache = listFiles();
-
-      precache_key(config.cache, function(key) {
+      var filesToCache = listFiles();
+      precache_key(filesToCache, function(key) {
+        config.cache = config.cache.concat(filesToCache);
         generateManifest(key, callback);
       });
     }
@@ -70,7 +77,7 @@ this.cacheManifest = function(env, callback, network, fallback) {
       body.push(config.cache[i].replace('./pub',''));
     };
 
-    body.push(''); body.push('NETWORK:');
+    body.push('NETWORK:');
 
     for (var j = 0; j < config.network.length; j++) {
       body.push(config.network[j]);
@@ -81,6 +88,8 @@ this.cacheManifest = function(env, callback, network, fallback) {
     for (var k = 0; k < config.fallback.length; k++) {
       body.push(config.fallback[k]);
     };
+
+    body.push('');
 
     fs.writeFile('./pub/application.manifest', body.join("\n"), function(err) {
       if (err) { throw err;}
