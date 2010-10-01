@@ -10,6 +10,7 @@ var journey = require('journey'),
 var todo = require('./todo').resource,
     session = require('./session/session'),
     routes = require('./routes');
+var offline = require('./offline');
 
 var options = {
     port: parseInt(process.argv[2]) || 8080,
@@ -48,6 +49,11 @@ this.server = http.createServer(function (request, response) {
         if (/MSIE [0-7]/.test(request.headers['user-agent'])) { // Block old IE
             file.serveFile('/upgrade.html', 200, {}, request, response);
             clearTimeout(timer);
+        } else if (request.url === '/application.manifest') {
+          offline.cacheManifest(env, function(cached) {
+            file.serveFile('/application.manifest', 200, {"Content-Type": "text/cache-manifest", "ExpiresActive": "On", "ExpiresDefault": "access plus 0 seconds"}, request, response);
+            clearTimeout(timer);
+          }, ['/js'], ['*'],['/ /offline.html']);
         } else if (request.url === '/') {
             todo.create(function (id) {
                 finish(303, { 'Location': '/' + id });
