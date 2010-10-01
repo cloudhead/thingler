@@ -85,7 +85,7 @@ var room = {
                 last:    last
             }, function (err, doc) {
                 if (err) {
-                    if (err.status !== 404) { console.log(err) }
+                    if (err.status !== 404) { log(err) }
                     room.changes.rollback(changes);
                 } else if (doc && doc.commits) {
                     room.rev = doc.rev || 0;
