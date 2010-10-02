@@ -21,10 +21,13 @@ var room = {
     rev: null,
     locked: false,
     doc: null,
+    localStorage: new Lawnchair({adaptor:'dom', keyName: '_id'}),
     changes: {
+        localStorage: new Lawnchair({adaptor:'dom', keyName: 'id'}),
         data:  [],
         rollback: function (changes) {
             this.data = changes.concat(this.data);
+            this.localStorage.save({id: 'changes', changes: this.data});
         },
         push: function (type, id, change, callback) {
             change          = change || {};
@@ -34,6 +37,7 @@ var room = {
             change.callback = callback;
 
             this.data.push(change);
+            this.localStorage.save({id: 'changes', changes: this.data});
 
             // If we're inserting, sync the change right away.
             // Else, let it happen on the next tick.
@@ -41,10 +45,25 @@ var room = {
                 clock.tick();
             }
         },
-        commit: function () {
+        commit: function (callback) {
+            var that = this;
             var commit = this.data;
-            this.data = [];
-            return commit;
+            //This is to handle the case where we went offline, made changes,
+            //closed app, opened app, came back online and need those changes synced
+            if (this.data.length == 0) {
+              this.localStorage.get('changes', function(data) {
+                data = data || {changes: []};
+                commit = data.changes;
+                that.data = [];
+                that.localStorage.save({id: 'changes', changes: that.data});
+                callback(commit);
+              });
+            }
+            else {
+              this.data = [];
+              this.localStorage.save({id: 'changes', changes: this.data});
+              callback(commit);
+            }
         }
     },
     initialize: function (doc) {
@@ -78,31 +97,34 @@ var room = {
         // Start the Clock
         //
         clock.init(function (clock, last) {
-            var changes = room.changes.commit();
-            xhr.resource(id)[last ? 'postSync' : 'post']({
-                rev:     room.rev || 0,
-                changes: changes,
-                last:    last
-            }, function (err, doc) {
-                if (err) {
-                    if (err.status !== 404) { log(err) }
-                    room.changes.rollback(changes);
-                } else if (doc && doc.commits) {
-                    room.rev = doc.rev || 0;
+            room.changes.commit(function(changes) {
+              xhr.resource(id)[last ? 'postSync' : 'post']({
+                  rev:     room.rev || 0,
+                  changes: changes,
+                  last:    last
+              }, function (err, doc) {
+                  if (err) {
+                      if (err.status !== 404) { log(err) }
+                      room.changes.rollback(changes);
+                  } else if (doc && doc.commits) {
+                      room.rev = doc.rev || 0;
 
-                    if (doc.commits.length > 0) {
-                        doc.commits.forEach(function (commit) {
-                            commit.changes.forEach(function (change) {
-                                handlers[change.type](change);
-                            });
-                        });
-                        clock.activity();
-                    }
-                }
-                clock.synchronised();
-                changes.forEach(function (change) {
-                    change.callback && change.callback();
-                });
+                      if (doc.commits.length > 0) {
+                          doc.commits.forEach(function (commit) {
+                              commit.changes.forEach(function (change) {
+                                  handlers[change.type](change);
+                              });
+                          });
+                          clock.activity();
+                          //update localstorage version of doc
+                          room.localStorage.save(doc);
+                      }
+                  }
+                  clock.synchronised();
+                  changes.forEach(function (change) {
+                      change.callback && change.callback();
+                  });
+              });
             });
         });
     }
@@ -146,6 +168,8 @@ var clock = {
     // Called on every interval tick.
     //
     tick: function (arg) {
+        //cancel sync if offline
+        if (!navigator.onLine) return;
         if (! this.synchronising) {
             this.synchronising = true;
             this.callback(this, arg);
@@ -212,60 +236,75 @@ title.onblur = function (e) {
     room.changes.push('title', null, { value: title.value });
 };
 
-xhr.resource(id).get(function (err, doc) {
-    var password = authenticate.querySelector('input');
-    if (err && err.status === 404) {
-        go('not-found');
-        if (id.match(/^[a-zA-Z0-9-]+$/)) {
-            create.onclick = function () {
-                xhr.resource(id).put(function (e, doc) {
-                    if (e) {
+function go(page) {
+    document.getElementById(page).style.display = 'block';
+    if (page === 'page') { input.focus() }
+}
 
-                    } else {
-                        go('page');
-                        dom.hide(document.getElementById('not-found'));
-                        room.initialize(doc);
-                    }
-                });
-                return false;
-            };
-        } else {
-            dom.hide(create);
-        }
-    } else if (err && err.status === 401) {
-        authenticate.style.display = 'block';
-        password.focus();
-        password.onkeydown = function (e) {
-            var that = this;
-            if (e.keyCode === 13) {
-                password.addClass('disabled');
-                password.disabled = true;
-                xhr.resource(id).path('session')
-                   .post({ password: this.value }, function (e, doc) {
-                       if (e) {
-                           that.addClass('error');
-                           password.removeClass('disabled');
-                           password.disabled = false;
-                       } else {
-                           xhr.resource(id).get(function (e, doc) {
-                               go('page');
-                               room.initialize(doc);
-                               dom.hide(authenticate);
-                           });
-                       }
-                   });
-            }
-        };
-    } else {
-        go('page');
-        room.initialize(doc);
-    }
+if (navigator.onLine) {
+  //get doc from the server on page load
+  xhr.resource(id).get(function (err, doc) {
+      var password = authenticate.querySelector('input');
+      if (err && err.status === 404) {
+          go('not-found');
+          if (id.match(/^[a-zA-Z0-9-]+$/)) {
+              create.onclick = function () {
+                  xhr.resource(id).put(function (e, doc) {
+                      if (e) {
 
-    function go(page) {
-        document.getElementById(page).style.display = 'block';
-        if (page === 'page') { input.focus() }
-    }
-});
+                      } else {
+                          go('page');
+                          dom.hide(document.getElementById('not-found'));
+                          room.initialize(doc);
+                          room.localStorage.save(doc);
+                      }
+                  });
+                  return false;
+              };
+          } else {
+              dom.hide(create);
+          }
+      } else if (err && err.status === 401) {
+          authenticate.style.display = 'block';
+          password.focus();
+          password.onkeydown = function (e) {
+              var that = this;
+              if (e.keyCode === 13) {
+                  password.addClass('disabled');
+                  password.disabled = true;
+                  xhr.resource(id).path('session')
+                     .post({ password: this.value }, function (e, doc) {
+                         if (e) {
+                             that.addClass('error');
+                             password.removeClass('disabled');
+                             password.disabled = false;
+                         } else {
+                             xhr.resource(id).get(function (e, doc) {
+                                 go('page');
+                                 room.initialize(doc);
+                                 dom.hide(authenticate);
+                                 room.localStorage.save(doc);
+                             });
+                         }
+                     });
+              }
+          };
+      } else {
+          go('page');
+          room.initialize(doc);
+          room.localStorage.save(doc);
+      }
+
+  });
+
+}
+else {
+  //retrieve doc from local storage
+  room.localStorage.get(id, function(doc) {
+    go('page');
+    room.initialize(doc);
+  });
+}
 
 var handlers = {
     insert: function (change) {
