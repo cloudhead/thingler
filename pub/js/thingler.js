@@ -53,6 +53,16 @@ var room = {
             this.data = [];
             this.localStorage.save({id: 'changes', changes: this.data});
             return commit;
+        },
+        replayLocalChanges: function() {
+          this.localStorage.get('changes', function(data) {
+            //replay changes to update UI
+            data.changes.forEach(function (change) {
+              ui_handlers[change.type](change);
+              //call change's callback if any
+              change.callback && change.callback();
+            });
+          });
         }
     },
     initialize: function (doc) {
@@ -640,6 +650,7 @@ if (navigator.onLine) {
                           go('page');
                           dom.hide(document.getElementById('not-found'));
                           room.initialize(doc);
+                          room.changes.replayLocalChanges();
                           room.localStorage.save(doc);
                       }
                   });
@@ -666,6 +677,7 @@ if (navigator.onLine) {
                              xhr.resource(id).get(function (e, doc) {
                                  go('page');
                                  room.initialize(doc);
+                                 room.changes.replayLocalChanges();
                                  dom.hide(authenticate);
                                  room.localStorage.save(doc);
                              });
@@ -682,6 +694,7 @@ if (navigator.onLine) {
       } else {
           go('page');
           room.initialize(doc);
+          room.changes.replayLocalChanges();
           room.localStorage.save(doc);
       }
   });
