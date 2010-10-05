@@ -60,11 +60,13 @@ var pilgrim = (function () {
     //
     // XHR
     //
-    this.XHR = function XHR(method, url, data, headers, async) {
+    this.XHR = function XHR(method, url, data, headers, async, timeout) {
         this.method = method.toLowerCase();
         this.url    = url;
         this.data   = data || {};
         this.async  = async;
+        this.requestDone = false;
+        this.timeout = timeout || 0;
 
         if (window.XMLHttpRequest) {
             this.xhr = new(XMLHttpRequest);
@@ -82,17 +84,85 @@ var pilgrim = (function () {
         this.data = JSON.stringify(this.data);
 
         this.xhr.open(this.method, this.url, this.async);
-        this.xhr.onreadystatechange = function () {
-            if (this.readyState != 4) { return }
+        var that = this;
+        var onreadystatechange = this.xhr.onreadystatechange = function (isTimeout) {
 
-            var body = this.responseText ? JSON.parse(this.responseText) : {};
+            if (that.xhr) {
+              var handleComplete = function(xhr, status, responseText) {
+                var body = {};
+                try {
+                   body = responseText ? JSON.parse(responseText) : {};
+                } catch(parseError) {}
 
-            if (this.status >= 200 && this.status < 300) { // Success
-                callback(null, body);
-            } else {                                       // Error
-                callback({ status: this.status, body: body, xhr: this });
+                if (['abort','timeout','error'].indexOf(status) != -1) {
+                    callback({ status: status, body: body, xhr: xhr });
+                } else if (status >= 200 && status < 300) { // Success
+                    callback(null, body);
+                } else { // Error
+                    callback({ status: status, body: body, xhr: xhr });
+                }
+              };
+
+              // The request was aborted
+              if ( !that.xhr || that.xhr.readyState === 0 || isTimeout === "abort" ) {
+
+                // Opera doesn't call onreadystatechange before this point
+                // so we simulate the call
+                if ( !that.requestDone ) {
+                  var status = isTimeout === 'abort' ? 'abort' : 0;
+                  handleComplete(that.xhr, status, that.xhr.responseText);
+                }
+
+                that.requestDone = true;
+
+                if ( that.xhr ) {
+                  that.xhr.onreadystatechange = function() {};
+                }
+
+              } else if ( !that.requestDone && that.xhr && (that.xhr.readyState === 4 || isTimeout === "timeout") ) {
+                 that.requestDone = true;
+                 that.xhr.onreadystatechange = function() {};
+
+
+                 var status = isTimeout === "timeout" ? 'timeout' : ((that.xhr.status < 99) ? 'error' : that.xhr.status);
+
+                 handleComplete(that.xhr, status, that.xhr.responseText);
+
+                 if ( isTimeout === "timeout" ) {
+                   that.xhr.abort();
+                 }
+
+                 // Stop memory leaks
+                 if ( that.async ) {
+                   that.xhr = null;
+                 }
+
+              }
+
             }
         };
+
+        if (this.timeout && this.timeout > 0) {
+          setTimeout(function() {
+            if (!this.requestDone) {
+              this.xhr.abort();
+            }
+          },this.timeout);
+        }
+
+
+        // Override the abort handler, if we can (IE doesn't allow it, but that's OK)
+        // Opera doesn't fire onreadystatechange at all on abort
+        try {
+          var oldAbort = xhr.abort;
+          this.xhr.abort = function() {
+            if ( this.xhr ) {
+              oldAbort.call( this.xhr );
+            }
+
+            onreadystatechange( "abort" );
+          };
+        } catch( abortError ) {}
 
         // Set content headers
         if (this.method === 'post' || this.method === 'put') {
@@ -103,6 +173,7 @@ var pilgrim = (function () {
         for (k in this.headers) {
             this.xhr.setRequestHeader(k, this.headers[k]);
         }
+
 
         // Dispatch request
         this.xhr.send(this.method === 'get' ? null : this.data);
