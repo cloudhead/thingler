@@ -551,7 +551,7 @@ function handleSort(id, to) {
 function handleTagFilter(filter) {
     var child, tag, tags;
 
-    list.querySelectorAll('li.active').forEach(function (e) {
+    Array.prototype.slice.call(list.querySelectorAll('li.active')).forEach(function (e) {
         e.removeClass('active');
     });
 
