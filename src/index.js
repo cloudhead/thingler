@@ -63,6 +63,13 @@ this.server = http.createServer(function (request, response) {
             // Dispatch the request to the router
             //
             router.route(request, body.join(''), function (result) {
+
+                sys.puts([
+                    new(Date)().toJSON(),
+                    log.join(' '),
+                    [result.status, http.STATUS_CODES[result.status], result.body].join(' ')
+                ].join(' -- '));
+
                 if (result.status === 406) { // A request for non-json data
                     file.serve(request, response, function (err, result) {
                         if (err) {
