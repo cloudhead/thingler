@@ -76,7 +76,9 @@ var pilgrim = (function () {
 
         this.headers = {
             'X-Requested-With': 'XMLHttpRequest',
-            'Accept':           'application/json'
+            'Accept':           'application/json',
+            'Cache-Control':    'no-store',
+            'Pragma':           'no-cache'
         };
         for (var k in headers) { this.headers[k] = headers[k] }
     };
@@ -92,7 +94,11 @@ var pilgrim = (function () {
                 var body = {};
                 try {
                    body = responseText ? JSON.parse(responseText) : {};
-                } catch(parseError) {}
+                } catch(parseError) {
+                  if (responseText && typeof responseText === 'string' && responseText.search(/offline/i) != -1) {
+                    status = 'error';
+                  }
+                }
 
                 if (['abort','timeout','error'].indexOf(status) != -1) {
                     callback({ status: status, body: body, xhr: xhr });
