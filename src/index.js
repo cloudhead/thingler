@@ -51,7 +51,7 @@ this.server = http.createServer(function (request, response) {
             clearTimeout(timer);
         } else if (request.url === '/application.manifest') {
           offline.cacheManifest(env, function(cached) {
-            file.serveFile('/application.manifest', 200, {"Content-Type": "text/cache-manifest", "ExpiresActive": "On", "ExpiresDefault": "access plus 0 seconds"}, request, response);
+            file.serveFile('/application.manifest', 200, {"Content-Type": "text/cache-manifest"}, request, response);
             clearTimeout(timer);
           }, ['/js'], ['*'],['/ /offline.html']);
         } else if (request.url === '/') {
@@ -79,7 +79,10 @@ this.server = http.createServer(function (request, response) {
                     });
                 } else {
                     session.create(request, function (header) {
-                        if (header) { result.headers['Set-Cookie'] = header['Set-Cookie'] }
+                        if (header) { result.headers['Set-Cookie'] = header['Set-Cookie']; }
+                        result.headers['Cache-Control'] = 'no-store';
+                        result.headers['Pragma'] = 'no-cache';
+                        result.headers['Expires'] = 'Sun, 19 Nov 1978 05:00:00 GMT';
                         finish(result.status, result.headers, result.body);
                     });
                 }
