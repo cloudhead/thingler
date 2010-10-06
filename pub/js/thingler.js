@@ -37,9 +37,14 @@ var room = {
             change.callback = callback;
 
             this.data.push(change);
+
+            //replay onto doc
             doc_handlers[change.type](room.doc, change);
+
+            //save doc to localStorage
             room.localStorage.save(room.doc);
 
+            //save changes to localStorage
             this.localStorage.save({id: 'changes', changes: this.data});
 
             // If we're inserting, sync the change right away.
@@ -57,88 +62,93 @@ var room = {
         replayLocalChanges: function() {
           this.localStorage.get('changes', function(data) {
             //replay changes to update UI
-            data.changes.forEach(function (change) {
-              ui_handlers[change.type](change);
-              //call change's callback if any
-              change.callback && change.callback();
-            });
+            if (data && data.changes) {
+              data.changes.forEach(function (change) {
+                ui_handlers[change.type](change);
+                //call change's callback if any
+                change.callback && change.callback();
+              });
+            }
           });
         }
     },
     initialize: function (doc) {
-        // Initialize title and revision number
-        room.rev = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
-        doc.rev = room.rev;
-        room.doc = doc;
-        setTitle(doc.title);
+        if (doc && doc._rev) {
+          // Initialize title and revision number
+          room.rev = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
+          doc.rev = room.rev;
+          room.doc = doc;
+          setTitle(doc.title);
 
-        if (doc.locked) {
-            lock.addClass('locked');
-            room.locked = true;
-        }
-        header.style.display = 'block';
-
-        // Initialize list
-        doc.items && doc.items.forEach(function (item) {
-            list.appendChild(createItem(item));
-        });
-
-        handleTagFilter(hash);
-        dom.sortable(list, handleSort);
-
-        footer.style.visibility = 'visible'
-
-        // Before shutdown, do one last sync
-        window.onbeforeunload = function (e) {
-            clock.tick(true);
-        };
-
-        //restore any offline changes
-        room.changes.localStorage.get('changes', function(data) {
-          if (data && data.changes) {
-            room.changes.data = data.changes;
+          if (doc.locked) {
+              lock.addClass('locked');
+              room.locked = true;
           }
-        });
+          header.style.display = 'block';
 
-        //
-        // Start the Clock
-        //
-        clock.init(function (clock, last) {
-            var changes = room.changes.commit();
-            xhr.resource(id)[last ? 'postSync' : 'post']({
-                rev:     room.rev || 0,
-                changes: changes,
-                last:    last
-            }, function (err, doc) {
-                if (err) {
-                    if (err.status !== 404) { log(err) }
-                    room.changes.rollback(changes);
-                    clock.synchronised();
-                } else if (doc && doc.commits) {
-                    room.rev = doc.rev || 0;
-                    room.doc.rev = room.rev;
-                    if (doc.commits.length > 0) {
-                        doc.commits.forEach(function (commit) {
-                            commit.changes.forEach(function (change) {
-                                ui_handlers[change.type](change);
+          // Initialize list
+          doc.items && doc.items.forEach(function (item) {
+              list.appendChild(createItem(item));
+          });
 
-                                //We don't get the actual doc back, just the changes, so we
-                                //also need to replaty the changes to the local doc (and save to localStorage)
-                                //so the next time the app is opened (while offline) we still have the right data
-                                doc_handlers[change.type](room.doc, change);
-                            });
-                        });
+          handleTagFilter(hash);
+          dom.sortable(list, handleSort);
 
-                        room.localStorage.save(room.doc);
-                        clock.activity();
-                    }
-                }
-                clock.synchronised();
-                changes.forEach(function (change) {
-                    change.callback && change.callback();
-                });
-            });
-        });
+          footer.style.visibility = 'visible'
+
+          // Before shutdown, do one last sync
+          window.onbeforeunload = function (e) {
+              clock.tick(true);
+          };
+
+          //restore any offline changes
+          room.changes.localStorage.get('changes', function(data) {
+            if (data && data.changes) {
+              room.changes.data = data.changes;
+            }
+          });
+
+          //
+          // Start the Clock
+          //
+          clock.init(function (clock, last) {
+              var changes = room.changes.commit();
+              xhr.resource(id)[last ? 'postSync' : 'post']({
+                  rev:     room.rev || 0,
+                  changes: changes,
+                  last:    last
+              }, function (err, doc) {
+                  if (err || (doc && !doc.commits)) {
+                      if (err && err.status !== 404) { log(err) }
+                      room.changes.rollback(changes);
+                      clock.synchronised();
+                  } else if (doc && doc.commits) {
+                      room.rev = doc.rev || 0;
+                      room.doc.rev = room.rev;
+                      if (doc.commits.length > 0) {
+                          doc.commits.forEach(function (commit) {
+                              commit.changes.forEach(function (change) {
+                                  ui_handlers[change.type](change);
+
+                                  //We don't get the actual doc back, just the changes, so we
+                                  //also need to replay the changes to the local doc (and save to localStorage)
+                                  //so the next time the app is opened (while offline) we still have the right data
+                                  doc_handlers[change.type](room.doc, change);
+                              });
+                          });
+
+                          room.localStorage.save(room.doc);
+                          clock.activity();
+                      }
+                  }
+                  clock.synchronised();
+                  changes.forEach(function (change) {
+                      change.callback && change.callback();
+                  });
+              });
+          });
+        }
+
     }
 };
 
