@@ -1,10 +1,15 @@
 // usage: log('inside coolFunc',this,arguments);
 // paulirish.com/2009/log-a-lightweight-wrapper-for-consolelog/
+thingler_debug = false;
+
 window.log = function(){
   log.history = log.history || [];   // store logs to an array for reference
-  log.history.push(arguments);
-  if(this.console){
-    console.log( Array.prototype.slice.call(arguments) );
+  if (thingler_debug) {
+    log.history.push(arguments);
+
+    if(this.console){
+      console.log( Array.prototype.slice.call(arguments) );
+    }
   }
 };
 
@@ -60,3 +65,20 @@ cache.addEventListener(
 
 // setInterval(function(){cache.update()}, 10000);
 
+//onoffline/online events
+var onoffline = function () {
+ log('Now offline...');
+};
+
+var ononline = function () {
+ log('Now online...');
+};
+
+if (window.addEventListener) {
+  document.body.addEventListener("offline", onoffline, false);
+  document.body.addEventListener("online", ononline, false);
+}
+else {
+  document.body.onoffline = onoffline;
+  document.body.ononline = ononline;
+}
