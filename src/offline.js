@@ -1,4 +1,6 @@
 var fs = require('fs');
+var sys = require('sys');
+var manifestPath = './pub/application.manifest';
 
 this.cacheManifest = function(env, callback, cache, network, fallback) {
   var config = {
@@ -28,27 +30,46 @@ this.cacheManifest = function(env, callback, cache, network, fallback) {
     };
   }
 
-  //check if we need to regenerate cache (if it doesn't exist or in dev mode)
-  fs.stat('./pub/application.manifest', function(err, stat) {
-    var regenerate = false;
+  //check if we need to regenerate cache (if manifest doesn't exist or key has changed)
+  fs.stat(manifestPath, function(err, stat) {
+    var exists = true;
 
-    if (err) {regenerate = true;}
-    else {
-      regenerate = (env === 'development');
-    }
+    if (err) {exists = false;}
 
-    if (regenerate) {
-      var filesToCache = listFiles();
-      precache_key(filesToCache, function(key) {
-        config.cache = config.cache.concat(filesToCache);
-        generateManifest(key, callback);
+    var filesToCache = listFiles();
+    precache_key(filesToCache, function(key) {
+      hasKeyChanged(exists, key, function(changed) {
+        if (changed || !exists) {
+          config.cache = config.cache.concat(filesToCache);
+          generateManifest(key, callback);
+        }
+        else callback(false, key);
       });
-    }
-    else callback(true);
+    });
   });
 
+  //check wether the manifest key has changed
+  var hasKeyChanged = function(manifestExists, newKey, cb) {
+    if (!manifestExists) {
+      cb(false);
+    } else {
+      fs.open(manifestPath, 'r+', function(err,fd) {
+        if (err) return;
+        var b = new Buffer(57);
+        fs.read(fd,b,0,57,0, function(err) {
+          if (err) return;
+          var oldKey = b.toString('utf8').match(/#(.*)$/)[1];
+          if (oldKey.trim() != newKey.trim()) {
+            cb(true);
+          } else {
+            cb(false);
+          }
+        });
+      });
+    }
+  };
 
-  //calculate the hask key from the files contents
+  //calculate the hash key from the files contents
   var precache_key = function(paths, cb) {
     var crypto = require('crypto');
     var hashes = [];
@@ -91,14 +112,15 @@ this.cacheManifest = function(env, callback, cache, network, fallback) {
 
     body.push('');
 
-    fs.writeFile('./pub/application.manifest', body.join("\n"), function(err) {
+    fs.writeFile(manifestPath, body.join("\n"), function(err) {
       if (err) { throw err;}
-      cbk(false);
+      cbk(true, key);
     });
   };
 
 };
 
+//TODO: Find a way to make this totally async
 var listFiles = function() {
   var paths = [];
   var public_root = '/pub';
@@ -113,7 +135,7 @@ var listFiles = function() {
         recursivelylistFiles(newPath);
       }
       else {
-        if (newPath != './pub/application.manifest') {
+        if (newPath != manifestPath) {
           paths.push(newPath);
         }
       }
@@ -122,5 +144,3 @@ var listFiles = function() {
   recursivelylistFiles('.' + public_root);
   return paths;
 };
-
-
