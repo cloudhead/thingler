@@ -77,15 +77,15 @@ var pilgrim = (function () {
         this.headers = {
             'X-Requested-With': 'XMLHttpRequest',
             'Accept':           'application/json',
-            'Cache-Control':    'no-store',
+            'Cache-Control':    'no-store, no-cache',
             'Pragma':           'no-cache'
         };
         for (var k in headers) { this.headers[k] = headers[k] }
     };
     this.XHR.prototype.send = function (callback) {
         this.data = JSON.stringify(this.data);
-
         this.xhr.open(this.method, this.url, this.async);
+
         var that = this;
         var onreadystatechange = this.xhr.onreadystatechange = function (isTimeout) {
 
@@ -108,6 +108,7 @@ var pilgrim = (function () {
                     callback({ status: status, body: body, xhr: xhr });
                 }
               };
+
 
               // The request was aborted
               if ( !that.xhr || that.xhr.readyState === 0 || isTimeout === "abort" ) {
@@ -148,6 +149,11 @@ var pilgrim = (function () {
             }
         };
 
+        //Workaround occasional weird resetting of Accepts header in firefox
+        if (navigator && navigator.userAgent.search(/firefox/i) != -1) {
+          this.xhr.onload = onreadystatechange;
+        }
+
         if (this.timeout && this.timeout > 0) {
           setTimeout(function() {
             if (!this.requestDone) {
@@ -179,7 +185,6 @@ var pilgrim = (function () {
         for (k in this.headers) {
             this.xhr.setRequestHeader(k, this.headers[k]);
         }
-
 
         // Dispatch request
         this.xhr.send(this.method === 'get' ? null : this.data);
