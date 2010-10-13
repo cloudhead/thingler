@@ -175,7 +175,7 @@ var tagPattern = /\B#[a-zA-Z0-9_-]+\b/g;
 
 dom.tokenizing(input, input.parentNode, tagPattern).on('new', function (e) {
     var tokens  = this.parentNode.querySelector('.tokens'),
-        title   = parseTitle(this.value),
+        title   = this.value,
         item    = { title: title, tags: e.tokens.concat(hash.length > 1 ? [hash] : []) },
         element = handlers.insert(item),
         id      = parseInt(element.firstChild.getAttribute('data-id'));
@@ -191,7 +191,7 @@ input.parentNode.on('focus', function () { this.addClass('focused') })
                 .on('blur',  function () { this.removeClass('focused') });
 
 function parseTitle(str) {
-    return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/, '&amp;').trim();
+    return str.replace(/&/, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
 }
 
 //
@@ -470,7 +470,7 @@ function refreshItem(element, item) {
             }
         });
     }
-    label.innerHTML = markup(item.title);
+    label.innerHTML = markup(parseTitle(item.title));
 }
 function markup(str) {
     return str.replace(/\*\*((?:\\\*|\*[^*]|[^*])+)\*\*/g, function (_, match) {
@@ -548,7 +548,7 @@ function handleEditSave(e) {
         label  = div.querySelector('label');
 
     var item = {
-        title: parseTitle(this.value),
+        title: this.value,
         tags: e.tokens
     };
 
