@@ -45,7 +45,7 @@ this.server = http.createServer(function (request, response) {
             }
         }, 5000);
 
-        if (/MSIE [0-7]/.test(request.headers['user-agent'])) { // Block old IE
+        if (/MSIE [0-8]/.test(request.headers['user-agent'])) { // Block old IE
             file.serveFile('/upgrade.html', 200, {}, request, response);
             clearTimeout(timer);
         } else if (request.url === '/') {
