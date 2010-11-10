@@ -481,7 +481,7 @@ function markup(str) {
         return '<em>' + match.replace(/\\_/g, '_') + '</em>';
     }).replace(/`((?:\\`|[^`])+)`/g, function (_, match) {
         return '<code>' + match.replace(/\\`/g, '`') + '</code>';
-    }).replace(/(http:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+    }).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 }
 
 function handleSort(id, to) {
