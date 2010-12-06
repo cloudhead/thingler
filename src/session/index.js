@@ -6,6 +6,7 @@ var md5 = require('../md5');
 this.resource = session;
 
 this.post = function (res, id, params, sess) {
+    id = id.toString();
     if (sess) {
         todo.get(id, function (e, doc) {
             if (! doc.password) {
