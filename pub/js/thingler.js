@@ -21,10 +21,13 @@ var room = {
     rev: null,
     locked: false,
     doc: null,
+    localStorage: new Lawnchair({adaptor:'dom', keyName: '_id'}),
     changes: {
+        localStorage: new Lawnchair({adaptor:'dom', keyName: 'id'}),
         data:  [],
         rollback: function (changes) {
             this.data = changes.concat(this.data);
+            this.localStorage.save({id: 'changes', changes: this.data});
         },
         push: function (type, id, change, callback) {
             change          = change || {};
@@ -35,6 +38,15 @@ var room = {
 
             this.data.push(change);
 
+            //replay onto doc
+            doc_handlers[change.type](room.doc, change);
+
+            //save doc to localStorage
+            room.localStorage.save(room.doc);
+
+            //save changes to localStorage
+            this.localStorage.save({id: 'changes', changes: this.data});
+
             // If we're inserting, sync the change right away.
             // Else, let it happen on the next tick.
             if (type === 'insert' || type === 'lock') {
@@ -44,67 +56,99 @@ var room = {
         commit: function () {
             var commit = this.data;
             this.data = [];
+            this.localStorage.save({id: 'changes', changes: this.data});
             return commit;
+        },
+        replayLocalChanges: function() {
+          this.localStorage.get('changes', function(data) {
+            //replay changes to update UI
+            if (data && data.changes) {
+              data.changes.forEach(function (change) {
+                ui_handlers[change.type](change);
+                //call change's callback if any
+                change.callback && change.callback();
+              });
+            }
+          });
         }
     },
     initialize: function (doc) {
-        // Initialize title and revision number
-        room.rev = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
-        room.doc = doc;
-        setTitle(doc.title);
+        if (doc && doc._rev) {
+          // Initialize title and revision number
+          room.rev = doc._rev && parseInt(doc._rev.match(/^(\d+)/)[1]);
+          doc.rev = room.rev;
+          room.doc = doc;
+          setTitle(doc.title);
 
-        if (doc.locked) {
-            lock.addClass('locked');
-            room.locked = true;
+          if (doc.locked) {
+              lock.addClass('locked');
+              room.locked = true;
+          }
+          header.style.display = 'block';
+
+          // Initialize list
+          doc.items && doc.items.forEach(function (item) {
+              list.appendChild(createItem(item));
+          });
+
+          handleTagFilter(hash);
+          dom.sortable(list, handleSort);
+
+          footer.style.visibility = 'visible'
+
+          // Before shutdown, do one last sync
+          window.onbeforeunload = function (e) {
+              clock.tick(true);
+          };
+
+          //restore any offline changes
+          room.changes.localStorage.get('changes', function(data) {
+            if (data && data.changes) {
+              room.changes.data = data.changes;
+            }
+          });
+
+          //
+          // Start the Clock
+          //
+          clock.init(function (clock, last) {
+              var changes = room.changes.commit();
+              xhr.resource(id)[last ? 'postSync' : 'post']({
+                  rev:     room.rev || 0,
+                  changes: changes,
+                  last:    last
+              }, function (err, doc) {
+                  if (err || (doc && !doc.commits)) {
+                      if (err && err.status !== 404) { log(err) }
+                      room.changes.rollback(changes);
+                      clock.synchronised();
+                  } else if (doc && doc.commits) {
+                      room.rev = doc.rev || 0;
+                      room.doc.rev = room.rev;
+                      if (doc.commits.length > 0) {
+                          doc.commits.forEach(function (commit) {
+                              commit.changes.forEach(function (change) {
+                                  ui_handlers[change.type](change);
+
+                                  //We don't get the actual doc back, just the changes, so we
+                                  //also need to replay the changes to the local doc (and save to localStorage)
+                                  //so the next time the app is opened (while offline) we still have the right data
+                                  doc_handlers[change.type](room.doc, change);
+                              });
+                          });
+
+                          room.localStorage.save(room.doc);
+                          clock.activity();
+                      }
+                  }
+                  clock.synchronised();
+                  changes.forEach(function (change) {
+                      change.callback && change.callback();
+                  });
+              });
+          });
         }
-        header.style.display = 'block';
 
-        // Initialize list
-        doc.items && doc.items.forEach(function (item) {
-            list.appendChild(createItem(item));
-        });
-
-        handleTagFilter(hash);
-        dom.sortable(list, handleSort);
-
-        footer.style.visibility = 'visible'
-
-        // Before shutdown, do one last sync
-        window.onbeforeunload = function (e) {
-            clock.tick(true);
-        };
-
-        //
-        // Start the Clock
-        //
-        clock.init(function (clock, last) {
-            var changes = room.changes.commit();
-            xhr.resource(id)[last ? 'postSync' : 'post']({
-                rev:     room.rev || 0,
-                changes: changes,
-                last:    last
-            }, function (err, doc) {
-                if (err) {
-                    if (err.status !== 404) { console.log(err) }
-                    room.changes.rollback(changes);
-                } else if (doc && doc.commits) {
-                    room.rev = doc.rev || 0;
-
-                    if (doc.commits.length > 0) {
-                        doc.commits.forEach(function (commit) {
-                            commit.changes.forEach(function (change) {
-                                handlers[change.type](change);
-                            });
-                        });
-                        clock.activity();
-                    }
-                }
-                clock.synchronised();
-                changes.forEach(function (change) {
-                    change.callback && change.callback();
-                });
-            });
-        });
     }
 };
 
@@ -146,6 +190,8 @@ var clock = {
     // Called on every interval tick.
     //
     tick: function (arg) {
+        //cancel sync if offline (only for browsers that support this)
+        if (!navigator.onLine) return;
         if (! this.synchronising) {
             this.synchronising = true;
             this.callback(this, arg);
@@ -177,7 +223,7 @@ dom.tokenizing(input, input.parentNode, tagPattern).on('new', function (e) {
     var tokens  = this.parentNode.querySelector('.tokens'),
         title   = this.value,
         item    = { title: title, tags: e.tokens.concat(hash.length > 1 ? [hash] : []) },
-        element = handlers.insert(item),
+        element = ui_handlers.insert(item),
         id      = parseInt(element.firstChild.getAttribute('data-id'));
 
     tokens.innerHTML = '';
@@ -212,62 +258,14 @@ title.onblur = function (e) {
     room.changes.push('title', null, { value: title.value });
 };
 
-xhr.resource(id).get(function (err, doc) {
-    var password = authenticate.querySelector('input');
-    if (err && err.status === 404) {
-        go('not-found');
-        if (id.match(/^[a-zA-Z0-9-]+$/)) {
-            create.onclick = function () {
-                xhr.resource(id).put(function (e, doc) {
-                    if (e) {
+function go(page) {
+    document.getElementById(page).style.display = 'block';
+    if (page === 'page') { input.focus() }
+}
 
-                    } else {
-                        go('page');
-                        dom.hide(document.getElementById('not-found'));
-                        room.initialize(doc);
-                    }
-                });
-                return false;
-            };
-        } else {
-            dom.hide(create);
-        }
-    } else if (err && err.status === 401) {
-        authenticate.style.display = 'block';
-        password.focus();
-        password.onkeydown = function (e) {
-            var that = this;
-            if (e.keyCode === 13) {
-                password.addClass('disabled');
-                password.disabled = true;
-                xhr.resource(id).path('session')
-                   .post({ password: this.value }, function (e, doc) {
-                       if (e) {
-                           that.addClass('error');
-                           password.removeClass('disabled');
-                           password.disabled = false;
-                       } else {
-                           xhr.resource(id).get(function (e, doc) {
-                               go('page');
-                               room.initialize(doc);
-                               dom.hide(authenticate);
-                           });
-                       }
-                   });
-            }
-        };
-    } else {
-        go('page');
-        room.initialize(doc);
-    }
 
-    function go(page) {
-        document.getElementById(page).style.display = 'block';
-        if (page === 'page') { input.focus() }
-    }
-});
 
-var handlers = {
+var ui_handlers = {
     insert: function (change) {
         var item = createItem(change);
         list.insertBefore(item, list.firstChild);
@@ -329,6 +327,61 @@ var handlers = {
     }
 };
 
+var doc_handlers = {
+    insert: function (doc, change) {
+        if ((doc.items.length + 1) < 256) {
+            if (! Array.isArray(change.tags)) { return }
+            doc.items.unshift({
+                id:    change.id,
+                title: change.title,
+                tags:  change.tags
+            });
+        }
+    },
+    title: function (doc, change) {
+        doc.title = change.value;
+    },
+    edit: function (doc, change) {
+        var item = findInDoc(change.id, doc);
+        if (item) {
+            item.title = change.title;
+            item.tags = change.tags;
+        }
+    },
+    sort: function (doc, change) {
+        var index = indexOf(change.id, doc), item;
+        if (index !== -1) {
+            item = doc.items.splice(index, 1)[0];
+            doc.items.splice(change.to, 0, item);
+        }
+    },
+    check: function (doc, change) {
+        var item = findInDoc(change.id, doc);
+        if (item) {
+            item.completed = ((typeof doc.timestamp === 'string') ? new Date(doc.timestamp) : doc.timestamp).getTime() + change.ctime;
+        }
+    },
+    uncheck: function (doc, change) {
+        var item = findInDoc(change.id, doc);
+        if (item) {
+            delete(item.completed);
+        }
+    },
+    remove: function (doc, change) {
+        var index = indexOf(change.id, doc);
+        if (index !== -1) {
+            doc.items.splice(index, 1);
+        }
+    },
+    lock: function (doc, change) {
+        doc.password = change.password;
+    },
+    unlock: function (doc, change) {
+        doc.password = null;
+    }
+};
+
+
 document.querySelector('[data-action="about"]').onclick = function () {
     if (about.style.display !== 'block') {
         about.style.display = 'block';
@@ -348,7 +401,7 @@ lock.onclick = function () {
 
     if (room.locked) {
         room.changes.push('unlock', null, {});
-        handlers.unlock();
+        ui_handlers.unlock();
     } else {
         input.disabled = false;
         input.removeClass('disabled');
@@ -361,7 +414,7 @@ lock.onclick = function () {
                 room.changes.push('lock', null, { password: input.value }, function () {
                     dom.hide(passwordProtect);
                 });
-                handlers.lock();
+                ui_handlers.lock();
                 return false;
             }
         };
@@ -374,6 +427,24 @@ lock.onclick = function () {
 //
 function find(id) {
     return list.querySelector('[data-id="' + id + '"]');
+}
+
+function findInDoc(id, doc) {
+    for (var i = 0; i < doc.items.length; i++) {
+        if (doc.items[i].id === id) {
+            return doc.items[i];
+        }
+    }
+    return null;
+}
+
+function indexOf(id, doc) {
+    for (var i = 0; i < doc.items.length; i++) {
+        if (doc.items[i].id === id) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 function createItem(item) {
@@ -490,7 +561,7 @@ function handleSort(id, to) {
 function handleTagFilter(filter) {
     var child, tag, tags;
 
-    list.querySelectorAll('li.active').forEach(function (e) {
+    Array.prototype.slice.call(list.querySelectorAll('li.active')).forEach(function (e) {
         e.removeClass('active');
     });
 
@@ -573,6 +644,80 @@ function setTitle(str) {
     title.value = str;
     document.title = 'Thingler · ' + str;
 }
+
+if (navigator.onLine) {
+  //get doc from the server on page load
+  xhr.resource(id).get(function (err, doc) {
+      var password = authenticate.querySelector('input');
+      if (err && err.status === 404) {
+          go('not-found');
+          if (id.match(/^[a-zA-Z0-9-]+$/)) {
+              create.onclick = function () {
+                  xhr.resource(id).put(function (e, doc) {
+                      if (e) {
+
+                      } else {
+                          go('page');
+                          dom.hide(document.getElementById('not-found'));
+                          room.initialize(doc);
+                          room.changes.replayLocalChanges();
+                          room.localStorage.save(doc);
+                      }
+                  });
+                  return false;
+              };
+          } else {
+              dom.hide(create);
+          }
+      } else if (err && err.status === 401) {
+          authenticate.style.display = 'block';
+          password.focus();
+          password.onkeydown = function (e) {
+              var that = this;
+              if (e.keyCode === 13) {
+                  password.addClass('disabled');
+                  password.disabled = true;
+                  xhr.resource(id).path('session')
+                     .post({ password: this.value }, function (e, doc) {
+                         if (e) {
+                             that.addClass('error');
+                             password.removeClass('disabled');
+                             password.disabled = false;
+                         } else {
+                             xhr.resource(id).get(function (e, doc) {
+                                 go('page');
+                                 room.initialize(doc);
+                                 room.changes.replayLocalChanges();
+                                 dom.hide(authenticate);
+                                 room.localStorage.save(doc);
+                             });
+                         }
+                     });
+              }
+          };
+      } else if (err || !doc._rev) {
+        //retrieve doc from local storage
+        room.localStorage.get(id, function(doc) {
+          go('page');
+          room.initialize(doc);
+        });
+      } else {
+          go('page');
+          room.initialize(doc);
+          room.changes.replayLocalChanges();
+          room.localStorage.save(doc);
+      }
+  });
+}
+else {
+  //retrieve doc from local storage
+  room.localStorage.get(id, function(doc) {
+    go('page');
+    room.initialize(doc);
+  });
+}
+
+
 //
 // Check the hashtag every 10ms, for changes
 //

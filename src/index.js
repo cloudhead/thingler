@@ -10,6 +10,7 @@ var journey = require('journey'),
 var todo = require('./todo').resource,
     session = require('./session/session'),
     routes = require('./routes');
+var offline = require('./offline');
 
 var options = {
     port: parseInt(process.argv[2]) || 8080,
@@ -36,7 +37,7 @@ this.server = http.createServer(function (request, response) {
         // of the request, send a 500 back.
         var timer = setTimeout(function () {
             if (! response.finished) {
-                if (request.headers.accept.indexOf('application/json') !== -1) {
+                if (request.headers.accept && request.headers.accept.indexOf('application/json') !== -1) {
                     response.writeHead(500, {});
                     response.end(JSON.stringify({error: 500}));
                 } else {
@@ -48,6 +49,30 @@ this.server = http.createServer(function (request, response) {
         if (/MSIE [0-8]/.test(request.headers['user-agent'])) { // Block old IE
             file.serveFile('/upgrade.html', 200, {}, request, response);
             clearTimeout(timer);
+        } else if (request.url === '/application.manifest') {
+          offline.cacheManifest(env, function(changed, key) {
+            var headers = {
+              "Content-Type": "text/cache-manifest",
+              "Cache-Control": "must-revalidate",
+              "ETag": key
+            };
+
+            if (changed) {
+              headers['Expires'] = new Date().toLocaleString();
+              headers['Last-Modified'] = new Date().toLocaleString();
+            }
+
+            if (env === 'development') {
+              sys.puts([
+                  new(Date)().toJSON(),
+                  '/application.manifest',
+                  sys.inspect(headers),
+              ].join(' -- '));
+            }
+
+            file.serveFile('/application.manifest', 200, headers, request, response);
+            clearTimeout(timer);
+          }, ['/js'], ['*'],['/ /offline.html']);
         } else if (request.url === '/') {
             todo.create(function (id) {
                 finish(303, { 'Location': '/' + id });
@@ -66,7 +91,10 @@ this.server = http.createServer(function (request, response) {
                     });
                 } else {
                     session.create(request, function (header) {
-                        if (header) { result.headers['Set-Cookie'] = header['Set-Cookie'] }
+                        if (header) { result.headers['Set-Cookie'] = header['Set-Cookie']; }
+                        result.headers['Cache-Control'] = 'no-store, no-cache';
+                        result.headers['Pragma'] = 'no-cache';
+                        result.headers['Expires'] = 'Sun, 19 Nov 1978 05:00:00 GMT';
                         finish(result.status, result.headers, result.body);
                     });
                 }
